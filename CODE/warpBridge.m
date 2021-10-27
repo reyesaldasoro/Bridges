@@ -1,4 +1,4 @@
-function [finalBridge,finalMedImage] = warpBridge(currentImage,maskBridge,medImage)
+function [finalBridge,finalMedImage,finalMask] = warpBridge(maskBridge,medImage,currentImage)
 
 
 centralLineBridge   = bwmorph(bwmorph(maskBridge,'thin','inf'),'spur',35);
@@ -32,7 +32,7 @@ lines               = houghlines(maskBridge,thetaH,rhoT,hPeaks,'FillGap',5,'MinL
 T                   =projective2d([1 -0.001 -0.0011; 0.194 1 0.001 ; 0 0 1]);
 
 warpedBridge        = imwarp(currentImage/255,(T));
-warpedMedImage        = imwarp(medImage/255,(T));
+warpedMedImage      = imwarp(medImage/255,(T));
 warpedMask          = imwarp(maskBridge,(T));
 warpedLine          = imwarp(centralLineBridge,T);
 % figure(4)
@@ -55,6 +55,8 @@ widthMaskW              = median(avWidthPerColumnW);
 
 finalBridge             = warpedBridge(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
 finalMedImage           = warpedMedImage(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
+finalMask               = warpedMask(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
+
 % subplot(313)
 % imagesc(finalBridge)
 % grid on
