@@ -4,6 +4,7 @@ if nargin==1
     load('laneMasks.mat')
 end
 %%
+[rows,cols]=size(currentThresholded);
 %remove noise, smaller than 2x2 per lane
 lowerObjects0    = imopen(currentThresholded.*laneMasks.lower,ones(1,2));
 upperObjects0    = imopen(currentThresholded.*laneMasks.upper,ones(1,2));
@@ -17,9 +18,16 @@ lowerObjects                = lowerObjects1;
 upperObjects                = (upperObjects1+numLower).*(upperObjects1>0);
 footObjects                 = (footObjects1+numLower+numUpper).*(footObjects1>0);
 %allObjects                  = bwlabel((lowerObjects1+upperObjects1+footObjects1)>0);
+allObjects                  = numLower+numUpper+numFoot;
 segmentedObjects            = lowerObjects+upperObjects+footObjects;
-segmentedObjects_P          = regionprops(segmentedObjects,'Area','MajoraxisLength','MinoraxisLength','orientation','Centroid','boundingbox');
-imagesc(segmentedObjects)
+segmentedObjects_P          = regionprops(segmentedObjects(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
+
+bBox                        = (reshape([segmentedObjects_P.BoundingBox],4,allObjects))';
+onEdge                      = num2cell((bBox(:,1)<5)|((bBox(:,1)+bBox(:,3))>(cols-5)));
+
+[segmentedObjects_P.onEdge] = onEdge{:};
+
+%imagesc(segmentedObjects)
 
 
 
