@@ -1,4 +1,4 @@
-function [finalBridge,finalMedImage,finalMask] = warpBridge(maskBridge,medImage,currentImage)
+function [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,currentImage,stdImage)
 
 
 centralLineBridge   = bwmorph(bwmorph(maskBridge,'thin','inf'),'spur',35);
@@ -35,6 +35,7 @@ warpedBridge        = imwarp(currentImage/255,(T));
 warpedMedImage      = imwarp(medImage/255,(T));
 warpedMask          = imwarp(maskBridge,(T));
 warpedLine          = imwarp(centralLineBridge,T);
+warpedStd           = imwarp(stdImage,T);
 % figure(4)
 % subplot(311)
 % imagesc(medImage/255)
@@ -56,6 +57,10 @@ widthMaskW              = median(avWidthPerColumnW);
 finalBridge             = warpedBridge(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
 finalMedImage           = warpedMedImage(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
 finalMask               = warpedMask(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
+finalCentralLine        = warpedLine(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
+finalStd                = warpedStd(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
+
+
 
 % subplot(313)
 % imagesc(finalBridge)
