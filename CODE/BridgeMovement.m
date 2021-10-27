@@ -149,89 +149,95 @@ numFrames = size(allFrames,4);
 % grid on
 %%
 
-clear F
+% clear F
+% 
+% weights =[1300 1300 1100 1100 1400 1200 1100 1400 1200];
+% carN ={'A','B','C','D','E','F','G','H','I','J'};
+% 
+%       U=  [ 0.7272046351     4.506912621   -2349.0397241;...
+%             -1.721730931      2.380932561    2316.6460731;...
+%              -3.77629198e-04  9.83714297e-4  1];
+%      T=maketform('projective',U');
 
-weights =[1300 1300 1100 1100 1400 1200 1100 1400 1200];
-carN ={'A','B','C','D','E','F','G','H','I','J'};
-
-      U=  [ 0.7272046351     4.506912621   -2349.0397241;...
-            -1.721730931      2.380932561    2316.6460731;...
-             -3.77629198e-04  9.83714297e-4  1];
-     T=maketform('projective',U');
-
-for k=1:100%numFrames
+for k=1:10:numFrames%numFrames
     %
-    %k=268;
+    %k=266;
     disp(k)
-    
-    
-    %       tempImage(:,:,1) =rChannel(:,:,k);
-    %       tempImage(:,:,2) =gChannel(:,:,k);
-    %       tempImage(:,:,3) =bChannel(:,:,k);
-    tempImage(:,:,1) =allFrames(:,:,1,k);
-    tempImage(:,:,2) =allFrames(:,:,2,k);
-    tempImage(:,:,3) =allFrames(:,:,3,k);
     [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
- %% 
     currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
     thresObject         = graythresh(currentDifference);
     
     currentThresholded  = (currentDifference>thresObject);
-    
-    currentThresholded1  = imopen((currentDifference>thresObject),ones(6,1));
-    currentThresholded2  = imopen((currentDifference>thresObject),ones(1,11));
-    
-    
-    imagesc(currentThresholded0+currentThresholded1+currentThresholded2);
-    
-    
-    %%
-    gt1 = (tempImage(:,:,1)>(double(medImage(:,:,1))+2.0*stdImage(:,:,1)));
-    gt2 = (tempImage(:,:,2)>(double(medImage(:,:,2))+2.0*stdImage(:,:,2)));
-    gt3 = (tempImage(:,:,3)>(double(medImage(:,:,3))+2.0*stdImage(:,:,3)));
-    lt1 = (tempImage(:,:,1)<(double(medImage(:,:,1))-2.0*stdImage(:,:,1)));
-    lt2 = (tempImage(:,:,2)<(double(medImage(:,:,2))-2.0*stdImage(:,:,2)));
-    lt3 = (tempImage(:,:,3)<(double(medImage(:,:,3))-2.0*stdImage(:,:,3)));
-    
-    changeI0 = (lt1+lt2+lt3+gt1+gt2+gt3).*maskBridge;
-    changeI1 = bwmorph(changeI0,'clean');
-    
-    changeI2 = bwmorph(bwmorph(changeI1,'clean'),'majority');
-    %changeI3 = imclose(changeI2,strel('disk',7));
-    changeI3 = bwlabel(imclose(changeI2,strel('rectangle',[4 15])));
-    changeI3P = regionprops(changeI3,'Area');
-    
-    changeI4a  = ismember (changeI3,find(([changeI3P.Area]>60).*([changeI3P.Area]<1000)));
-    changeI4b  = imopen(ismember (changeI3,find([changeI3P.Area]>=1000)),strel('line',20,14));
 
-    changeI5 =imdilate(zerocross((changeI4b+changeI4a)-0.5),ones(3));
-    tempImage2(:,:,k) = imfill(changeI4b+changeI4a,'holes');
-    tempImage(changeI5)=255;
-    [separateVehicles,numVeh] = bwlabel(tempImage2(:,:,k));
-    separateV_L = regionprops(separateVehicles,'centroid','Area');
-    separateV2 = zeros(size(separateVehicles));
-    medImage2 =medImage;
-    rangeR=-40:0;
-    rangeC=-3:3;
-    for k2 = 1:numVeh
-        separateV2 = separateV2+k2*imclose(separateVehicles==k2,ones(11));
-        tempC=round(separateV_L(k2).Centroid);
-        medImage2(tempC(2)+rangeR,tempC(1)+rangeC,1 )=255;
-        medImage2(tempC(2)+rangeR,tempC(1)+rangeC,2 )=0;
-        medImage2(tempC(2)+rangeR,tempC(1)+rangeC,3 )=0;
-    end
-
-    %tempImage = imread(strcat('BridgeTraffic/',dir0(k).name));
-    %imagesc([tempImage.*uint8(repmat(changeI3,[1 1 3]));tempImage])
-    figure(11)
-    imagesc(tempImage/255)
-     pause(0.005)
-    figure(12)
+    [segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
+    subplot(211)
+    imagesc(segmentedObjects)
+    subplot(212)
+    imagesc(finalBridge)
+    drawnow
     
-
-
-    P2=imrotate(imtransform(uint8(imresize(tempImage,[1750 2333])),T,'XData',[1 rows],'YData',[1 cols]),-90);
-    imagesc(P2)
+%     %       tempImage(:,:,1) =rChannel(:,:,k);
+%     %       tempImage(:,:,2) =gChannel(:,:,k);
+%     %       tempImage(:,:,3) =bChannel(:,:,k);
+%     tempImage(:,:,1) =allFrames(:,:,1,k);
+%     tempImage(:,:,2) =allFrames(:,:,2,k);
+%     tempImage(:,:,3) =allFrames(:,:,3,k);
+%     %
+%     
+%     currentThresholded1  = imopen((currentDifference>thresObject),ones(6,1));
+%     currentThresholded2  = imopen((currentDifference>thresObject),ones(1,11));
+%     
+%     
+%     imagesc(currentThresholded0+currentThresholded1+currentThresholded2);
+%     
+%     
+%     %
+%     gt1 = (tempImage(:,:,1)>(double(medImage(:,:,1))+2.0*stdImage(:,:,1)));
+%     gt2 = (tempImage(:,:,2)>(double(medImage(:,:,2))+2.0*stdImage(:,:,2)));
+%     gt3 = (tempImage(:,:,3)>(double(medImage(:,:,3))+2.0*stdImage(:,:,3)));
+%     lt1 = (tempImage(:,:,1)<(double(medImage(:,:,1))-2.0*stdImage(:,:,1)));
+%     lt2 = (tempImage(:,:,2)<(double(medImage(:,:,2))-2.0*stdImage(:,:,2)));
+%     lt3 = (tempImage(:,:,3)<(double(medImage(:,:,3))-2.0*stdImage(:,:,3)));
+%     
+%     changeI0 = (lt1+lt2+lt3+gt1+gt2+gt3).*maskBridge;
+%     changeI1 = bwmorph(changeI0,'clean');
+%     
+%     changeI2 = bwmorph(bwmorph(changeI1,'clean'),'majority');
+%     %changeI3 = imclose(changeI2,strel('disk',7));
+%     changeI3 = bwlabel(imclose(changeI2,strel('rectangle',[4 15])));
+%     changeI3P = regionprops(changeI3,'Area');
+%     
+%     changeI4a  = ismember (changeI3,find(([changeI3P.Area]>60).*([changeI3P.Area]<1000)));
+%     changeI4b  = imopen(ismember (changeI3,find([changeI3P.Area]>=1000)),strel('line',20,14));
+%     
+%     changeI5 =imdilate(zerocross((changeI4b+changeI4a)-0.5),ones(3));
+%     tempImage2(:,:,k) = imfill(changeI4b+changeI4a,'holes');
+%     tempImage(changeI5)=255;
+%     [separateVehicles,numVeh] = bwlabel(tempImage2(:,:,k));
+%     separateV_L = regionprops(separateVehicles,'centroid','Area');
+%     separateV2 = zeros(size(separateVehicles));
+%     medImage2 =medImage;
+%     rangeR=-40:0;
+%     rangeC=-3:3;
+%     for k2 = 1:numVeh
+%         separateV2 = separateV2+k2*imclose(separateVehicles==k2,ones(11));
+%         tempC=round(separateV_L(k2).Centroid);
+%         medImage2(tempC(2)+rangeR,tempC(1)+rangeC,1 )=255;
+%         medImage2(tempC(2)+rangeR,tempC(1)+rangeC,2 )=0;
+%         medImage2(tempC(2)+rangeR,tempC(1)+rangeC,3 )=0;
+%     end
+%     
+%     %tempImage = imread(strcat('BridgeTraffic/',dir0(k).name));
+%     %imagesc([tempImage.*uint8(repmat(changeI3,[1 1 3]));tempImage])
+%     figure(11)
+%     imagesc(tempImage/255)
+%     pause(0.005)
+%     figure(12)
+%     
+%     
+%     
+%     P2=imrotate(imtransform(uint8(imresize(tempImage,[1750 2333])),T,'XData',[1 rows],'YData',[1 cols]),-90);
+%     imagesc(P2)
      
      
 %     drawnow;
