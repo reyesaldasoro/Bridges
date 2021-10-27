@@ -88,7 +88,7 @@ numFrames = size(allFrames,4);
 % 
 %load('maskBridge2.mat')
 %% find the main orientation of the bridge
-[finalBridge,finalMedImage,finalMask]  = warpBridge(maskBridge,medImage,medImage);
+[finalBridge,finalMedImage,finalMask,finalLine]  = warpBridge(maskBridge,medImage,medImage);
 % 
 % centralLineBridge   = bwmorph(bwmorph(maskBridge,'thin','inf'),'spur',35);
 % [HT,thetaH,rhoT]    = hough(centralLineBridge);
@@ -163,13 +163,27 @@ for k=1:100%numFrames
     disp(k)
     
     
-%       tempImage(:,:,1) =rChannel(:,:,k);
-%       tempImage(:,:,2) =gChannel(:,:,k);
-%       tempImage(:,:,3) =bChannel(:,:,k);
-      tempImage(:,:,1) =allFrames(:,:,1,k);
-      tempImage(:,:,2) =allFrames(:,:,2,k);
-      tempImage(:,:,3) =allFrames(:,:,3,k);
- [finalBridge,finalMedImage] = warpBridge(allFrames(:,:,:,k),maskBridge,medImage);   
+    %       tempImage(:,:,1) =rChannel(:,:,k);
+    %       tempImage(:,:,2) =gChannel(:,:,k);
+    %       tempImage(:,:,3) =bChannel(:,:,k);
+    tempImage(:,:,1) =allFrames(:,:,1,k);
+    tempImage(:,:,2) =allFrames(:,:,2,k);
+    tempImage(:,:,3) =allFrames(:,:,3,k);
+    [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
+ %% 
+    currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
+    thresObject         = graythresh(currentDifference);
+    
+    currentThresholded0  = (currentDifference>thresObject);
+    
+    currentThresholded1  = imopen((currentDifference>thresObject),ones(6,1));
+    currentThresholded2  = imopen((currentDifference>thresObject),ones(1,11));
+    
+    
+    imagesc(currentThresholded1+currentThresholded2);
+    
+    
+    %%
     gt1 = (tempImage(:,:,1)>(double(medImage(:,:,1))+2.0*stdImage(:,:,1)));
     gt2 = (tempImage(:,:,2)>(double(medImage(:,:,2))+2.0*stdImage(:,:,2)));
     gt3 = (tempImage(:,:,3)>(double(medImage(:,:,3))+2.0*stdImage(:,:,3)));
