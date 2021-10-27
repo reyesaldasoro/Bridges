@@ -3,7 +3,9 @@
 clear all
 close all
 
-cd('C:\Users\sbbk034\OneDrive - City, University of London\Acad\Research\AlfredoCamara')
+cd('C:\Users\sbbk034\OneDrive - City, University of London\Documents\GitHub\Bridges\CODE')
+
+dir0 = ('C:\Users\sbbk034\OneDrive - City, University of London\Acad\Research\AlfredoCamara\');
 %% Input from the separate frames
 %dir0  = dir ('BridgeTraffic/Br*.png');
 %numFrames = size(dir0,1);
@@ -19,9 +21,10 @@ cd('C:\Users\sbbk034\OneDrive - City, University of London\Acad\Research\Alfredo
 
 %preview(cam) %dislay the images
 %% Alternative input from the video
-[allFrames,medImage,stdImage] = readVideoBridge('BridgeTraffic.mov');
- v=VideoReader('BridgeTraffic.mov');
- numFrames = v.NumFrames;
+[allFrames,medImage,stdImage] = readVideoBridge(strcat(dir0,'BridgeTraffic.mov'));
+numFrames = size(allFrames,4);
+%v=VideoReader('BridgeTraffic.mov');
+%numFrames = v.NumFrames;
 % firstFrame = read(v,1);
 % [rows,cols,levs] = size(firstFrame);
 % %% Read all the frames
@@ -85,7 +88,7 @@ cd('C:\Users\sbbk034\OneDrive - City, University of London\Acad\Research\Alfredo
 % 
 %load('maskBridge2.mat')
 %% find the main orientation of the bridge
-finalBridge = warpBridge(maskBridge,medImage);
+[finalBridge,finalMedImage,finalMask]  = warpBridge(maskBridge,medImage,medImage);
 % 
 % centralLineBridge   = bwmorph(bwmorph(maskBridge,'thin','inf'),'spur',35);
 % [HT,thetaH,rhoT]    = hough(centralLineBridge);
