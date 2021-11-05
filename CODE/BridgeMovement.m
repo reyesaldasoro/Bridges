@@ -1,11 +1,21 @@
 
-
+%% Clear all variables and close all figures
 clear all
 close all
+clc
+%% Prepare folders
+if strcmp(filesep,'/')
+    % Running in Mac
+    cd ('~/Academic/GitHub/Bridges/CODE')
+    dir0 = ('~/OneDrive - City, University of London/Acad/Research/AlfredoCamara/');
+else
+    % running in windows Alienware  
 
-cd('C:\Users\sbbk034\OneDrive - City, University of London\Documents\GitHub\Bridges\CODE')
+    cd('C:\Users\sbbk034\OneDrive - City, University of London\Documents\GitHub\Bridges\CODE')
+    dir0 = ('C:\Users\sbbk034\OneDrive - City, University of London\Acad\Research\AlfredoCamara\');
 
-dir0 = ('C:\Users\sbbk034\OneDrive - City, University of London\Acad\Research\AlfredoCamara\');
+end
+
 %% Input from the separate frames
 %dir0  = dir ('BridgeTraffic/Br*.png');
 %numFrames = size(dir0,1);
