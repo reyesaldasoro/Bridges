@@ -5,7 +5,6 @@ function [allFrames,medImage,stdImage] = readVideoBridge(BridgeVideo)
 %v=VideoReader('BridgeTraffic.mov');
 v=VideoReader(BridgeVideo);
 try
-
     numFrames = v.NumFrames;
 catch
     numFrames = v.Duration*v.FrameRate;
