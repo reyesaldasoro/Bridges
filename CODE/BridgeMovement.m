@@ -99,8 +99,15 @@ numFrames = size(allFrames,4);
 %load('maskBridge2.mat')
 %% find the main orientation of the bridge
 %[finalBridge,finalMedImage,finalMask,finalLine]  = warpBridge(maskBridge,medImage,medImage);
+k=1;
 [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
-
+load laneMasks
+    currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
+    thresObject         = graythresh(currentDifference);
+    
+    currentThresholded  = (currentDifference>thresObject);
+[segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
+    
 % 
 % centralLineBridge   = bwmorph(bwmorph(maskBridge,'thin','inf'),'spur',35);
 % [HT,thetaH,rhoT]    = hough(centralLineBridge);
@@ -168,7 +175,33 @@ numFrames = size(allFrames,4);
 %             -1.721730931      2.380932561    2316.6460731;...
 %              -3.77629198e-04  9.83714297e-4  1];
 %      T=maketform('projective',U');
+%% Arrange display
+h0=figure(1);
+h1      = subplot(121);
+h11     = imagesc(allFrames(:,:,:,1)/255);
 
+h2      = subplot(222);
+h22     = imagesc(finalBridge);
+    
+h3      = subplot(224);
+h33     = imagesc(segmentedObjects);
+    drawnow
+
+h0.Position = [200 200 1200 500];
+h1.Position = [    0.03    0.10    0.28    0.86];
+
+h2.Position = [    0.34    0.56    0.64    0.4];
+
+h3.Position = [    0.34    0.10    0.64    0.4];
+
+jet2=jet;jet2(1 ,:)=[0 0 0];colormap(jet2)
+
+        
+        
+        
+
+
+%%
 for k=1:10:numFrames%numFrames
     %
     %k=266;
@@ -180,11 +213,17 @@ for k=1:10:numFrames%numFrames
     currentThresholded  = (currentDifference>thresObject);
 
     [segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
-    subplot(211)
-    imagesc(segmentedObjects)
-    subplot(212)
-    imagesc(finalBridge)
+    %subplot(211)
+    %imagesc(segmentedObjects)
+    %subplot(212)
+    %imagesc(finalBridge)
+    
+    h11.CData     = (allFrames(:,:,:,k)/255);
+    h22.CData     = (finalBridge);
+    h33.CData     = (segmentedObjects);
+    
     drawnow
+    
     
 %     %       tempImage(:,:,1) =rChannel(:,:,k);
 %     %       tempImage(:,:,2) =gChannel(:,:,k);
