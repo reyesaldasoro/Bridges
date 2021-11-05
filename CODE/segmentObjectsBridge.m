@@ -14,13 +14,21 @@ footObjects0     = imopen(currentThresholded.*laneMasks.foot,ones(1,2));
 [upperObjects1,numUpper]    = bwlabel(imopen(imclose(upperObjects0,ones(8,9)),ones(3)));
 [footObjects1 ,numFoot]     = bwlabel(imopen(imclose(footObjects0,ones(3,2)),ones(3)));
 
-lowerObjects                = lowerObjects1;
-upperObjects                = (upperObjects1+numLower).*(upperObjects1>0);
+lowerObjects_P              = regionprops(lowerObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
+[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find([lowerObjects_P.Area]>35)));
+upperObjects_P              = regionprops(upperObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
+[upperObjects2,numLower]    = bwlabel(ismember(upperObjects1,find([upperObjects_P.Area]>35)));
+
+
+
+lowerObjects                = lowerObjects2;
+upperObjects                = (upperObjects2+numLower).*(upperObjects2>0);
 footObjects                 = (footObjects1+numLower+numUpper).*(footObjects1>0);
 %allObjects                  = bwlabel((lowerObjects1+upperObjects1+footObjects1)>0);
 allObjects                  = numLower+numUpper+numFoot;
 segmentedObjects            = lowerObjects+upperObjects+footObjects;
 segmentedObjects_P          = regionprops(segmentedObjects(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
+
 
 bBox                        = (reshape([segmentedObjects_P.BoundingBox],4,allObjects))';
 onEdge                      = num2cell((bBox(:,1)<5)|((bBox(:,1)+bBox(:,3))>(cols-5)));
