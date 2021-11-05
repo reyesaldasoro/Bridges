@@ -187,7 +187,7 @@ h3      = subplot(224);
 h33     = imagesc(segmentedObjects);
     drawnow
 
-h0.Position = [200 200 1200 500];
+h0.Position = [200 200 1200 400];
 h1.Position = [    0.03    0.10    0.28    0.86];
 
 h2.Position = [    0.34    0.56    0.64    0.4];
@@ -202,12 +202,12 @@ jet2=jet;jet2(1 ,:)=[0 0 0];colormap(jet2)
 
 
 %%
-for k=1:10:numFrames%numFrames
+for k=801:10:numFrames%numFrames
     %
     %k=266;
     disp(k)
-    [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
-    currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
+    [finalBridge]       = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
+    currentDifference   = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
     thresObject         = graythresh(currentDifference);
     
     currentThresholded  = (currentDifference>thresObject);
