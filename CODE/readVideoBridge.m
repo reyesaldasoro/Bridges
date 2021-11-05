@@ -4,8 +4,13 @@ function [allFrames,medImage,stdImage] = readVideoBridge(BridgeVideo)
 %% Alternative input from the video
 %v=VideoReader('BridgeTraffic.mov');
 v=VideoReader(BridgeVideo);
+try
 
-numFrames = v.NumFrames;
+    numFrames = v.NumFrames;
+catch
+    numFrames = v.Duration*v.FrameRate;
+end
+    
 firstFrame = read(v,1);
 [rows,cols,levs] = size(firstFrame);
 %% Read all the frames
