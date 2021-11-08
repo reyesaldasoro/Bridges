@@ -29,7 +29,7 @@ lines               = houghlines(maskBridge,thetaH,rhoT,hPeaks,'FillGap',5,'MinL
 %rotatedBridge       = (imrotate(medImage/255,-180+hPeaks(2)));
 %%
 
-T                   =projective2d([1 -0.001 -0.0011; 0.194 1 0.001 ; 0 0 1]);
+T                   = projective2d([1 -0.001 -0.0011; 0.194 1 0.001 ; 0 0 1]);
 
 warpedBridge        = imwarp(currentImage/255,(T));
 warpedMedImage      = imwarp(medImage/255,(T));
