@@ -20,7 +20,7 @@ end
 %dir0  = dir ('BridgeTraffic/Br*.png');
 %numFrames = size(dir0,1);
 
-%% This needs 
+%% Read data directly from a website ???
 % MATLAB Support Package for IP Cameras 
 % open Add-On Explorer and install
 %cam = ipcam('https://v.angelcam.com/iframe?v=v40le5pnl5&token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW4iOiJvbG5lLmdyIiwiY2FtZXJhX2lkIjo1OTI0LCJleHAiOjE2MzQ4OTI0OTN9.Fbysjs3JHLANS8pSQ8a-JbsPjESb8HXVb7Fu9js1TXk');
@@ -101,6 +101,8 @@ numFrames = size(allFrames,4);
 %[finalBridge,finalMedImage,finalMask,finalLine]  = warpBridge(maskBridge,medImage,medImage);
 k=1;
 [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
+
+%%
 load laneMasks
     currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
     thresObject         = graythresh(currentDifference);
@@ -176,7 +178,7 @@ load laneMasks
 %              -3.77629198e-04  9.83714297e-4  1];
 %      T=maketform('projective',U');
 %% Arrange display
-h0=figure(1);
+h0=figure(4);
 h1      = subplot(121);
 h11     = imagesc(allFrames(:,:,:,1)/255);
 
@@ -202,7 +204,7 @@ jet2=jet;jet2(1 ,:)=[0 0 0];colormap(jet2)
 
 
 %%
-for k=801:10:numFrames%numFrames
+for k=481%:10:numFrames%numFrames
     %
     %k=266;
     disp(k)
