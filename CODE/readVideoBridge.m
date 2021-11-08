@@ -1,4 +1,4 @@
-function [allFrames,medImage,stdImage] = readVideoBridge(BridgeVideo)
+function [allFrames,medImage,stdImage,v] = readVideoBridge(BridgeVideo)
 
 
 %% Alternative input from the video
