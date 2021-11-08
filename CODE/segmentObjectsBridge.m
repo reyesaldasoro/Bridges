@@ -15,9 +15,9 @@ footObjects0     = imopen(currentThresholded.*laneMasks.foot,ones(1,2));
 [footObjects1 ,numFoot]     = bwlabel(imopen(imclose(footObjects0,ones(3,2)),ones(3)));
 
 lowerObjects_P              = regionprops(lowerObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
-[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find([lowerObjects_P.Area]>35)));
+[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find([lowerObjects_P.Area]>55)));
 upperObjects_P              = regionprops(upperObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
-[upperObjects2,numLower]    = bwlabel(ismember(upperObjects1,find([upperObjects_P.Area]>35)));
+[upperObjects2,numUpper]    = bwlabel(ismember(upperObjects1,find([upperObjects_P.Area]>55)));
 
 
 
