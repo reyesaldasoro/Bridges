@@ -31,7 +31,7 @@ end
 
 %preview(cam) %dislay the images
 %% Alternative input from the video
-[allFrames,medImage,stdImage] = readVideoBridge(strcat(dir0,'BridgeTraffic.mov'));
+[allFrames,medImage,stdImage,videoHandle] = readVideoBridge(strcat(dir0,'BridgeTraffic.mov'));
 numFrames = size(allFrames,4);
 %v=VideoReader('BridgeTraffic.mov');
 %numFrames = v.NumFrames;
@@ -204,7 +204,8 @@ jet2=jet;jet2(1 ,:)=[0 0 0];colormap(jet2)
 
 
 %%
-for k=1750%1:10:numFrames%numFrames
+k2=1;
+for k=1:50:numFrames%numFrames
     %
     %k=266;
     disp(k)
@@ -223,9 +224,28 @@ for k=1750%1:10:numFrames%numFrames
     h11.CData     = (allFrames(:,:,:,k)/255);
     h22.CData     = (finalBridge);
     h33.CData     = (segmentedObjects);
+     drawnow
     
-    drawnow
+    currentObjects      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Area];
+    currentCentroids    = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Centroid];
+    currentPos          = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).position];
+    currentWeights      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).weight];
     
+    % time
+    temporalResults{k2,1} = k/videoHandle.FrameRate;
+    % num Objects
+    temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
+%     % Area
+%     temporalResults{k2,3} = currentObjects;
+%     % position x pixels
+%     temporalResults{k2,4} = currentCentroids(1:2:end);
+%     % Position y pixels
+%     temporalResults{k2,5} = currentCentroids(2:2:end);
+    % position metres from left edge
+    temporalResults{k2,3} = round(currentPos);
+    % weight
+    temporalResults{k2,4} = round(currentWeights);
+    k2=k2+1;
     
 %     %       tempImage(:,:,1) =rChannel(:,:,k);
 %     %       tempImage(:,:,2) =gChannel(:,:,k);
@@ -296,75 +316,75 @@ for k=1750%1:10:numFrames%numFrames
     %
 end
 %%
-for k=1:10:300%numFrames
-    disp(k)
-P2=imrotate(imtransform(uint8(imresize(allFrames(:,:,:,k),[1750 2333])),T,'XData',[1 rows],'YData',[1 cols]),-90);
-subplot(211)
-imagesc(allFrames(:,:,:,k)/255)
-
-subplot(212)
-imagesc(P2)
-%imagesc(allFrames(:,:,:,k)/255)
-drawnow
-    
-end
-
-
-%% Prepare a good figure
-figure(2)
-k=100;
-h231=subplot(231);
-imagesc(allFrames(:,:,:,k)/255)
-title('(a) Representative Frame','fontsize',14)
-axis off
-
-h232=subplot(232);
-imagesc(medImage(:,:,:)/255)
-title('(b) Background','fontsize',14)
-axis off
-
-h233=subplot(233);
-imagesc(stdImage(:,:,:)/25)
-title('(c) Variation over time','fontsize',14)
-axis off
-
-h234=subplot(234);
-imagesc(tempImage/255)
-title('(d) Objects detected','fontsize',14)
-axis off
-
-h235=subplot(235);
-imagesc(separateV2)
-title('(e) Objects identified','fontsize',14)
-for k2 = 1:numVeh
-        tempC=round(separateV_L(k2).Centroid);
-        text(tempC(1)-15,tempC(2)-35,carN{k2},'color','w','fontsize',9 );
-end
-axis off
-
-h236=subplot(236);
-imagesc(medImage2/255)
-title('(f) Corresponding Weights','fontsize',14)
-for k2 = 1:numVeh
-        tempC=round(separateV_L(k2).Centroid);
-        text(tempC(1)-45,tempC(2)-55,num2str(weights(k2)),'color','w','fontsize',9 );
-end
-axis off
-
-%%
-hWidth  = 0.31;
-hHeight = 0.43; 
-h231.Position=[0.02 0.52 hWidth hHeight];
-h232.Position=[0.35 0.52 hWidth hHeight];
-h233.Position=[0.68 0.52 hWidth hHeight];
-h234.Position=[0.02 0.02 hWidth hHeight];
-h235.Position=[0.35 0.02 hWidth hHeight];
-h236.Position=[0.68 0.02 hWidth hHeight];
-
-
-filename='CarDetectionBridge.png';
-
-%print('-dpng','-r400',filename)
+% for k=1:10:300%numFrames
+%     disp(k)
+% P2=imrotate(imtransform(uint8(imresize(allFrames(:,:,:,k),[1750 2333])),T,'XData',[1 rows],'YData',[1 cols]),-90);
+% subplot(211)
+% imagesc(allFrames(:,:,:,k)/255)
+% 
+% subplot(212)
+% imagesc(P2)
+% %imagesc(allFrames(:,:,:,k)/255)
+% drawnow
+%     
+% end
+% 
+% 
+% %% Prepare a good figure
+% figure(2)
+% k=100;
+% h231=subplot(231);
+% imagesc(allFrames(:,:,:,k)/255)
+% title('(a) Representative Frame','fontsize',14)
+% axis off
+% 
+% h232=subplot(232);
+% imagesc(medImage(:,:,:)/255)
+% title('(b) Background','fontsize',14)
+% axis off
+% 
+% h233=subplot(233);
+% imagesc(stdImage(:,:,:)/25)
+% title('(c) Variation over time','fontsize',14)
+% axis off
+% 
+% h234=subplot(234);
+% imagesc(tempImage/255)
+% title('(d) Objects detected','fontsize',14)
+% axis off
+% 
+% h235=subplot(235);
+% imagesc(separateV2)
+% title('(e) Objects identified','fontsize',14)
+% for k2 = 1:numVeh
+%         tempC=round(separateV_L(k2).Centroid);
+%         text(tempC(1)-15,tempC(2)-35,carN{k2},'color','w','fontsize',9 );
+% end
+% axis off
+% 
+% h236=subplot(236);
+% imagesc(medImage2/255)
+% title('(f) Corresponding Weights','fontsize',14)
+% for k2 = 1:numVeh
+%         tempC=round(separateV_L(k2).Centroid);
+%         text(tempC(1)-45,tempC(2)-55,num2str(weights(k2)),'color','w','fontsize',9 );
+% end
+% axis off
+% 
+% %%
+% hWidth  = 0.31;
+% hHeight = 0.43; 
+% h231.Position=[0.02 0.52 hWidth hHeight];
+% h232.Position=[0.35 0.52 hWidth hHeight];
+% h233.Position=[0.68 0.52 hWidth hHeight];
+% h234.Position=[0.02 0.02 hWidth hHeight];
+% h235.Position=[0.35 0.02 hWidth hHeight];
+% h236.Position=[0.68 0.02 hWidth hHeight];
+% 
+% 
+% filename='CarDetectionBridge.png';
+% 
+% %print('-dpng','-r400',filename)
 
 
 %%
