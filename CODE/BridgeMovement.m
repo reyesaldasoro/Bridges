@@ -204,7 +204,7 @@ jet2=jet;jet2(1 ,:)=[0 0 0];colormap(jet2)
 
 
 %%
-for k=481%:10:numFrames%numFrames
+for k=1750%1:10:numFrames%numFrames
     %
     %k=266;
     disp(k)
