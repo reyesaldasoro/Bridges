@@ -1,4 +1,6 @@
-% Figure 2
+%% Figure 2, 
+% To generate, run warpBridge and pause with a Breakpoint, then run this
+% code
 h0=figure(2);
 h1= subplot(131);
  imagesc(repmat(1-maskBridge,[1 1 3]).*(medImage/255))
