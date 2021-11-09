@@ -34,57 +34,50 @@ end
 [allFrames,medImage,stdImage,videoHandle] = readVideoBridge(strcat(dir0,'BridgeTraffic.mov'));
 numFrames = size(allFrames,4);
 
-%%
-
 %% Find the mask of the Bridge from std
  maskBridge = calculateBridgeMask(stdImage);
 
 
 %% find the main orientation of the bridge
 %[finalBridge,finalMedImage,finalMask,finalLine]  = warpBridge(maskBridge,medImage,medImage);
-k=1;
-[finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
+
+[finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,1),stdImage);
 
 %%
 load laneMasks
+
+    
+
+toDisplay = 1;
+
+%% Arrange display
+if toDisplay ==1
     currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
     thresObject         = graythresh(currentDifference);
     
     currentThresholded  = (currentDifference>thresObject);
-[segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
-    
-
-
-
-%% Arrange display
-h0=figure(4);
-h1      = subplot(121);
-h11     = imagesc(allFrames(:,:,:,1)/255);
-
-h2      = subplot(222);
-h22     = imagesc(finalBridge);
-    
-h3      = subplot(224);
-h33     = imagesc(segmentedObjects);
+    [segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
+    h0=figure(4);
+    h1      = subplot(121);
+    h11     = imagesc(allFrames(:,:,:,1)/255);
+    h2      = subplot(222);
+    h22     = imagesc(finalBridge);
+    h3      = subplot(224);
+    h33     = imagesc(segmentedObjects);
     drawnow
-
-h0.Position = [200 200 1200 400];
-h1.Position = [    0.03    0.10    0.28    0.86];
-
-h2.Position = [    0.34    0.56    0.64    0.4];
-
-h3.Position = [    0.34    0.10    0.64    0.4];
-
-jet2=jet;jet2(1 ,:)=[0 0 0];colormap(jet2)
-
-        
-        
-        
-
+    
+    h0.Position = [200 200 1200 400];
+    h1.Position = [    0.03    0.10    0.28    0.86];
+    h2.Position = [    0.34    0.56    0.64    0.4];
+    h3.Position = [    0.34    0.10    0.64    0.4];   
+    jet2=jet;jet2(1 ,:)=[0 0 0];colormap(jet2)    
+end
 
 %%
 k2=1;
-for k=1:50:numFrames%numFrames
+
+% Iterate over the video, grab one frame per second
+for k=videoHandle.FrameRate:videoHandle.FrameRate:numFrames%numFrames
     %
 
     disp(k)
@@ -96,12 +89,13 @@ for k=1:50:numFrames%numFrames
 
     [segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
 
-    
-    h11.CData     = (allFrames(:,:,:,k)/255);
-    h22.CData     = (finalBridge);
-    h33.CData     = (segmentedObjects);
-     drawnow
-    
+    if toDisplay==1
+        h11.CData     = (allFrames(:,:,:,k)/255);
+        h22.CData     = (finalBridge);
+        h33.CData     = (segmentedObjects);
+        drawnow
+        %     F(k2) = getframe();
+    end
     currentObjects      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Area];
     currentCentroids    = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Centroid];
     currentPos          = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).position];
@@ -118,14 +112,11 @@ for k=1:50:numFrames%numFrames
     k2=k2+1;
 
     %     % Area
-%     temporalResults{k2,3} = currentObjects;
-%     % position x pixels
-%     temporalResults{k2,4} = currentCentroids(1:2:end);
-%     % Position y pixels
-%     temporalResults{k2,5} = currentCentroids(2:2:end);
-
-%     F(k) = getframe();
-    %
+    %     temporalResults{k2,3} = currentObjects;
+    %     % position x pixels
+    %     temporalResults{k2,4} = currentCentroids(1:2:end);
+    %     % Position y pixels
+    %     temporalResults{k2,5} = currentCentroids(2:2:end);
 end
 
 %%
