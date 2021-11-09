@@ -17,15 +17,17 @@ footObjects0     = imopen(currentThresholded.*laneMasks.foot,ones(1,2));
 [footObjects1 ,numFoot]     = bwlabel(imopen(imclose(footObjects0,ones(3,2)),ones(3)));
 
 lowerObjects_P              = regionprops(lowerObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
-[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find([lowerObjects_P.Area]>55)));
+[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find([lowerObjects_P.Area]>85)));
 upperObjects_P              = regionprops(upperObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
-[upperObjects2,numUpper]    = bwlabel(ismember(upperObjects1,find([upperObjects_P.Area]>55)));
+[upperObjects2,numUpper]    = bwlabel(ismember(upperObjects1,find([upperObjects_P.Area]>85)));
+footObjects_P              = regionprops(footObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
+[footObjects2,numFoot]     = bwlabel(ismember(footObjects1,find([footObjects_P.Area]>35)));
 
 
 
 lowerObjects                = lowerObjects2;
 upperObjects                = (upperObjects2+numLower).*(upperObjects2>0);
-footObjects                 = (footObjects1+numLower+numUpper).*(footObjects1>0);
+footObjects                 = (footObjects2+numLower+numUpper).*(footObjects2>0);
 %allObjects                  = bwlabel((lowerObjects1+upperObjects1+footObjects1)>0);
 allObjects                  = numLower+numUpper+numFoot;
 segmentedObjects            = lowerObjects+upperObjects+footObjects;
@@ -35,8 +37,10 @@ segmentedObjects_P2          = regionprops(segmentedObjects(:,end:-1:1),'Area','
 currCentroid                = [segmentedObjects_P.Centroid];
 
 bBox                        = (reshape([segmentedObjects_P2.BoundingBox],4,allObjects))';
+onEdge1                      = ((bBox(:,1)<120)|((bBox(:,1)+bBox(:,3))>(cols-200)));
 onEdge                      = num2cell((bBox(:,1)<120)|((bBox(:,1)+bBox(:,3))>(cols-200)));
 
+% Remove objects on edge
 [segmentedObjects_P.onEdge] = onEdge{:};
 % Calibrate for position over the bridge.
 % https://www.google.com/maps/place/High+Bridge+Evripos/@38.462794,23.5891122,59m/data=!3m1!1e3!4m5!3m4!1s0x14a1176be68d6a11:0x16bf37cb1c41f5f1!8m2!3d38.4448767!4d23.5908359
@@ -52,9 +56,9 @@ avPosY                        = num2cell(50*(currCentroid(2:2:end))/785);
 % CAR           Average weight 1,500 kg
 % MOTORCYCLE    average weight 180 kg + 1 person = 250 kg
 % PERSON        average weight 70 kg
-avW = num2cell( 1500* ([segmentedObjects_P.Area]>=600) + ...
-        250* (([segmentedObjects_P.Area]<600)&([segmentedObjects_P.Area]>200)) + ...
-         70* ([segmentedObjects_P.Area]<200) );      
+avW = num2cell( 1500* ([segmentedObjects_P.Area]>=400) + ...
+        250* (([segmentedObjects_P.Area]<400)&([segmentedObjects_P.Area]>=150)) + ...
+         70* ([segmentedObjects_P.Area]<150) );      
 %imagesc(segmentedObjects)
 [segmentedObjects_P.weight]=avW{:};
 for k=1:allObjects
@@ -66,5 +70,6 @@ for k=1:allObjects
         segmentedObjects_P(k).typeObj='P';
     end
 end
-
-
+% figure(7)
+% imagesc(segmentedObjects)
+% tt=1;
