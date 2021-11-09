@@ -42,8 +42,10 @@ onEdge                      = num2cell((bBox(:,1)<120)|((bBox(:,1)+bBox(:,3))>(c
 % https://www.google.com/maps/place/High+Bridge+Evripos/@38.462794,23.5891122,59m/data=!3m1!1e3!4m5!3m4!1s0x14a1176be68d6a11:0x16bf37cb1c41f5f1!8m2!3d38.4448767!4d23.5908359
 % approx 50 metres (from junctions) 35 metres over water
 % Position starts in column 150 and finishes in 935 = 785 pixels for 50 metres
-avPos                       = num2cell(50*(currCentroid(1:2:end)-150)/785);
-[segmentedObjects_P.position]=avPos{:};
+avPosX                        = num2cell(50*(currCentroid(1:2:end)-150)/785);
+[segmentedObjects_P.positionX]=avPosX{:};
+avPosY                        = num2cell(50*(currCentroid(2:2:end))/785);
+[segmentedObjects_P.positionY]=avPosY{:};
 % Calibrate for weights
 % https://cars.lovetoknow.com/List_of_Car_Weights
 % https://motorgearexpert.com/how-much-does-a-motorcycle-weigh/
@@ -55,5 +57,14 @@ avW = num2cell( 1500* ([segmentedObjects_P.Area]>=600) + ...
          70* ([segmentedObjects_P.Area]<200) );      
 %imagesc(segmentedObjects)
 [segmentedObjects_P.weight]=avW{:};
+for k=1:allObjects
+    if avW{k}==1500
+        segmentedObjects_P(k).typeObj='C';
+    elseif avW{k}==250
+        segmentedObjects_P(k).typeObj='M';
+    elseif avW{k}==70
+        segmentedObjects_P(k).typeObj='P';
+    end
+end
 
 
