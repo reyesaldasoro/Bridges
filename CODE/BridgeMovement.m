@@ -75,9 +75,10 @@ end
 
 %%
 k2=1;
+clear temporalResults
 
 % Iterate over the video, grab one frame per second
-for k=videoHandle.FrameRate:videoHandle.FrameRate:numFrames%numFrames
+for k=videoHandle.FrameRate/4:videoHandle.FrameRate/4:numFrames%numFrames
     %
 
     disp(k)
@@ -94,7 +95,7 @@ for k=videoHandle.FrameRate:videoHandle.FrameRate:numFrames%numFrames
         h22.CData     = (finalBridge);
         h33.CData     = (segmentedObjects);
         drawnow
-        %     F(k2) = getframe();
+        F(k2)       = getframe(h0);
     end
     currentObjects      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Area];
     currentCentroids    = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Centroid];
@@ -114,24 +115,76 @@ for k=videoHandle.FrameRate:videoHandle.FrameRate:numFrames%numFrames
     temporalResults{k2,5} = round(currentPosY);
     temporalResults{k2,6} = currentTypeObj;
 
-    k2=k2+1;
 
-    %     % Area
-    %     temporalResults{k2,3} = currentObjects;
+         % Area
+         temporalResults{k2,7} = currentObjects;
     %     % position x pixels
-    %     temporalResults{k2,4} = currentCentroids(1:2:end);
+         temporalResults{k2,8} = currentCentroids(1:2:end);
     %     % Position y pixels
-    %     temporalResults{k2,5} = currentCentroids(2:2:end);
+         temporalResults{k2,9} = currentCentroids(2:2:end);
+         
+             k2=k2+1;
+
 end
 
 %%
 if toDisplay==1
+    figure(7)
+    clf
+    h1=gca;
+
     numTimePoints = size(temporalResults,1);
     for counterTimeP=1:numTimePoints
-        
-        
-    end
+        travelRight = temporalResults{counterTimeP,5}==2;
+        travelLeft  = temporalResults{counterTimeP,5}==3;
+        travelFoot  = temporalResults{counterTimeP,5}==1;
+        text(temporalResults{counterTimeP,4}(travelFoot),counterTimeP+temporalResults{counterTimeP,5}(travelFoot)/3,temporalResults{counterTimeP,6}(travelFoot),'fontsize',6,'color','r')
+        text(temporalResults{counterTimeP,4}(travelRight),counterTimeP+temporalResults{counterTimeP,5}(travelRight)/3,temporalResults{counterTimeP,6}(travelRight),'fontsize',8,'color','k')
+        text(temporalResults{counterTimeP,4}(travelLeft),counterTimeP+temporalResults{counterTimeP,5}(travelLeft)/3,temporalResults{counterTimeP,6}(travelLeft),'fontsize',8,'color','b')  
+    end   
+    axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 numTimePoints+3])
+    axis ij
+    ylabel('Time [sec]')
+    xlabel('Position [m]')
 end
+%%
+if toDisplay==1
+    figure(8)
+    clf
+    h1=gca;
+
+    numTimePoints = size(temporalResults,1);
+    for counterTimeP=1:numTimePoints
+        travelRight = temporalResults{counterTimeP,5}==2;
+        travelLeft  = temporalResults{counterTimeP,5}==3;
+        travelFoot  = temporalResults{counterTimeP,5}==1;
+        subplot(131)
+        text(temporalResults{counterTimeP,4}(travelFoot),counterTimeP+temporalResults{counterTimeP,5}(travelFoot)/3,temporalResults{counterTimeP,6}(travelFoot),'fontsize',6,'color','r')
+        subplot(132)
+        text(temporalResults{counterTimeP,4}(travelRight),counterTimeP+temporalResults{counterTimeP,5}(travelRight)/3,temporalResults{counterTimeP,6}(travelRight),'fontsize',8,'color','k')
+        subplot(133)
+        text(temporalResults{counterTimeP,4}(travelLeft),counterTimeP+temporalResults{counterTimeP,5}(travelLeft)/3,temporalResults{counterTimeP,6}(travelLeft),'fontsize',8,'color','b')
+    end
+    subplot(131)
+    axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 numTimePoints+3])
+    axis ij
+    ylabel('Time [sec]')
+    xlabel('Position [m]')
+        grid on
+    subplot(132)
+    axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 numTimePoints+3])
+    axis ij
+    ylabel('Time [sec]')
+    xlabel('Position [m]')
+        grid on
+    subplot(133)
+    axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 numTimePoints+3])
+    axis ij
+    ylabel('Time [sec]')
+    xlabel('Position [m]')
+    grid on
+end
+
 
     %% save the movie as a GIF
     [imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
