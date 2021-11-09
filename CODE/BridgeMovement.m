@@ -98,17 +98,22 @@ for k=videoHandle.FrameRate:videoHandle.FrameRate:numFrames%numFrames
     end
     currentObjects      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Area];
     currentCentroids    = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Centroid];
-    currentPos          = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).position];
+    currentPosX         = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).positionX];
+    currentPosY         = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).positionY];
     currentWeights      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).weight];
+    currentTypeObj      = {segmentedObjects_P([segmentedObjects_P.onEdge]==0).typeObj};
     
     % time
     temporalResults{k2,1} = k/videoHandle.FrameRate;
     % num Objects
     temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
-    % position metres from left edge
-    temporalResults{k2,3} = round(currentPos);
     % weight
-    temporalResults{k2,4} = round(currentWeights);
+    temporalResults{k2,3} = round(currentWeights);
+    % position metres from left edge
+    temporalResults{k2,4} = round(currentPosX);
+    temporalResults{k2,5} = round(currentPosY);
+    temporalResults{k2,6} = currentTypeObj;
+
     k2=k2+1;
 
     %     % Area
@@ -120,7 +125,13 @@ for k=videoHandle.FrameRate:videoHandle.FrameRate:numFrames%numFrames
 end
 
 %%
-
+if toDisplay==1
+    numTimePoints = size(temporalResults,1);
+    for counterTimeP=1:numTimePoints
+        
+        
+    end
+end
 
     %% save the movie as a GIF
     [imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
