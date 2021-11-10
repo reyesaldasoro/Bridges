@@ -16,15 +16,30 @@ footObjects0     = imopen(currentThresholded.*laneMasks.foot,ones(1,2));
 % [upperObjects1,numUpper]    = bwlabel(imopen(imclose(upperObjects0,ones(14,12)),ones(3)));
 [footObjects1 ,numFoot]     = bwlabel(imopen(imclose(footObjects0,ones(3,2)),ones(3)));
 
+ % remove objects that are close to edges
+
 lowerObjects_P              = regionprops(lowerObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
-[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find([lowerObjects_P.Area]>85)));
+lowerObjects_bBox           = (reshape([lowerObjects_P.BoundingBox],4,numLower))';
+lowerObjects_onEdge1        = ((lowerObjects_bBox(:,1)<120)|((lowerObjects_bBox(:,1)+lowerObjects_bBox(:,3))>(cols-200)));
+
+[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find(  (lowerObjects_onEdge1'==0) &([lowerObjects_P.Area]>85) )));
+
 upperObjects_P              = regionprops(upperObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
-[upperObjects2,numUpper]    = bwlabel(ismember(upperObjects1,find([upperObjects_P.Area]>85)));
+upperObjects_bBox           = (reshape([upperObjects_P.BoundingBox],4,numUpper))';
+upperObjects_onEdge1        = ((upperObjects_bBox(:,1)<120)|((upperObjects_bBox(:,1)+upperObjects_bBox(:,3))>(cols-200)));
+
+[upperObjects2,numUpper]    = bwlabel(ismember(upperObjects1,find(   (upperObjects_onEdge1'==0)   &([upperObjects_P.Area]>85) )));
+
 footObjects_P              = regionprops(footObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
-[footObjects2,numFoot]     = bwlabel(ismember(footObjects1,find([footObjects_P.Area]>35)));
+footObjects_bBox           = (reshape([footObjects_P.BoundingBox],4,numFoot))';
+footObjects_onEdge1        = ((footObjects_bBox(:,1)<120)|((footObjects_bBox(:,1)+footObjects_bBox(:,3))>(cols-200)));
+
+[footObjects2,numFoot]     = bwlabel(ismember(footObjects1,find(  (footObjects_onEdge1'==0) &  ([footObjects_P.Area]>35))));
 
 
 
+
+% arrange so that labels correspond to position: lower>upper>foot
 lowerObjects                = lowerObjects2;
 upperObjects                = (upperObjects2+numLower).*(upperObjects2>0);
 footObjects                 = (footObjects2+numLower+numUpper).*(footObjects2>0);
@@ -36,12 +51,12 @@ segmentedObjects_P2          = regionprops(segmentedObjects(:,end:-1:1),'Area','
 
 currCentroid                = [segmentedObjects_P.Centroid];
 
-bBox                        = (reshape([segmentedObjects_P2.BoundingBox],4,allObjects))';
-onEdge1                      = ((bBox(:,1)<120)|((bBox(:,1)+bBox(:,3))>(cols-200)));
-onEdge                      = num2cell((bBox(:,1)<120)|((bBox(:,1)+bBox(:,3))>(cols-200)));
+% bBox                        = (reshape([segmentedObjects_P2.BoundingBox],4,allObjects))';
+% onEdge1                      = ((bBox(:,1)<120)|((bBox(:,1)+bBox(:,3))>(cols-200)));
+% onEdge                      = num2cell((bBox(:,1)<120)|((bBox(:,1)+bBox(:,3))>(cols-200)));
 
 % Remove objects on edge
-[segmentedObjects_P.onEdge] = onEdge{:};
+%[segmentedObjects_P.onEdge] = onEdge{:};
 % Calibrate for position over the bridge.
 % https://www.google.com/maps/place/High+Bridge+Evripos/@38.462794,23.5891122,59m/data=!3m1!1e3!4m5!3m4!1s0x14a1176be68d6a11:0x16bf37cb1c41f5f1!8m2!3d38.4448767!4d23.5908359
 % approx 50 metres (from junctions) 35 metres over water
@@ -57,8 +72,8 @@ avPosY                        = num2cell(50*(currCentroid(2:2:end))/785);
 % MOTORCYCLE    average weight 180 kg + 1 person = 250 kg
 % PERSON        average weight 70 kg
 avW = num2cell( 1500* ([segmentedObjects_P.Area]>=400) + ...
-        250* (([segmentedObjects_P.Area]<400)&([segmentedObjects_P.Area]>=150)) + ...
-         70* ([segmentedObjects_P.Area]<150) );      
+        250* (([segmentedObjects_P.Area]<400)&([segmentedObjects_P.Area]>=170)) + ...
+         70* ([segmentedObjects_P.Area]<170) );      
 %imagesc(segmentedObjects)
 [segmentedObjects_P.weight]=avW{:};
 for k=1:allObjects
@@ -70,6 +85,20 @@ for k=1:allObjects
         segmentedObjects_P(k).typeObj='P';
     end
 end
-% figure(7)
-% imagesc(segmentedObjects)
-% tt=1;
+
+%% Remove objects in the edge (not over the bridge)
+% segmentedObjects_P([segmentedObjects_P.onEdge]==1)=[];
+
+
+%     currentObjects      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Area];
+%     currentCentroids    = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Centroid];
+%     currentPosX         = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).positionX];
+%     currentPosY         = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).positionY];
+%     currentWeights      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).weight];
+%     currentTypeObj      = {segmentedObjects_P([segmentedObjects_P.onEdge]==0).typeObj};
+
+
+
+%  figure(7)
+%  imagesc(segmentedObjects)
+%  tt=1;
