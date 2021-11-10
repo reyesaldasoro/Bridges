@@ -76,9 +76,10 @@ end
 %%
 k2=1;
 clear temporalResults
-
+selectRate = 4;
+temporalResults2 =[];
 % Iterate over the video, grab one frame per second
-for k=videoHandle.FrameRate/4:videoHandle.FrameRate/4:numFrames%numFrames
+for k=videoHandle.FrameRate/selectRate:videoHandle.FrameRate/selectRate:numFrames%numFrames
     %
 
     disp(k)
@@ -97,17 +98,23 @@ for k=videoHandle.FrameRate/4:videoHandle.FrameRate/4:numFrames%numFrames
         drawnow
         F(k2)       = getframe(h0);
     end
-    currentObjects      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Area];
-    currentCentroids    = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).Centroid];
-    currentPosX         = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).positionX];
-    currentPosY         = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).positionY];
-    currentWeights      = [segmentedObjects_P([segmentedObjects_P.onEdge]==0).weight];
-    currentTypeObj      = {segmentedObjects_P([segmentedObjects_P.onEdge]==0).typeObj};
+    currentObjects      = [segmentedObjects_P.Area];
+    currentCentroids    = [segmentedObjects_P.Centroid];
+    currentPosX         = [segmentedObjects_P.positionX];
+    currentPosY         = [segmentedObjects_P.positionY];
+    currentWeights      = [segmentedObjects_P.weight];
+    currentTypeObj      = {segmentedObjects_P.typeObj};
+    
+    % Store in 2 ways, one a cell per time point, 
+    % one a single matrix with x,y,area,weight
+    numCurrentObjects = numel(currentObjects);
+    temporalResults2=[temporalResults2;[round(currentPosX') round(currentPosY') repmat(k/videoHandle.FrameRate,[numCurrentObjects 1]) currentWeights' ]];
     
     % time
     temporalResults{k2,1} = k/videoHandle.FrameRate;
     % num Objects
-    temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
+    temporalResults{k2,2} = numCurrentObjects;
+    %temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
     % weight
     temporalResults{k2,3} = round(currentWeights);
     % position metres from left edge
@@ -126,6 +133,24 @@ for k=videoHandle.FrameRate/4:videoHandle.FrameRate/4:numFrames%numFrames
              k2=k2+1;
 
 end
+%% Assign labels to cars
+
+
+selectLane2      = temporalResults2(:,2)==2;tilt = 0.15;
+currentLane     = temporalResults2(selectLane2,:);
+currentLane_tilt = currentLane(:,3)+tilt*currentLane(:,1);
+[a,b]           = sort(currentLane_tilt);
+labelLane2       = 1+[0; cumsum(diff(a)>0.5)];
+temporalResults2(selectLane2,5)= labelLane2;
+
+selectLane3      = temporalResults2(:,2)==3; tilt=-0.16;
+currentLane     = temporalResults2(selectLane3,:);
+currentLane_tilt = currentLane(:,3)+tilt*currentLane(:,1);
+[a,b]           = sort(currentLane_tilt);
+labelLane3       = max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
+temporalResults2(selectLane3,5)= labelLane3;
+
+
 
 %%
 if toDisplay==1
@@ -149,12 +174,12 @@ if toDisplay==1
 end
 %%
 if toDisplay==1
-    figure(8)
+    figure(9)
     clf
     h1=gca;
 
     numTimePoints = size(temporalResults,1);
-    for counterTimeP=1:numTimePoints
+    for counterTimeP=1:1:numTimePoints
         travelRight = temporalResults{counterTimeP,5}==2;
         travelLeft  = temporalResults{counterTimeP,5}==3;
         travelFoot  = temporalResults{counterTimeP,5}==1;
@@ -184,7 +209,63 @@ if toDisplay==1
     xlabel('Position [m]')
     grid on
 end
+%%
 
+
+%%
+if toDisplay==1
+    figure(10)
+    clf
+    h1=gca;
+    % foot
+    labelsObjects={'P','C','C'};
+    coloursObjects={'P','b','k'};
+    
+    counterLane=1;
+          selectLane      = temporalResults2(:,2)==counterLane;
+        currentLane     = temporalResults2(selectLane,:);
+        numObjects      = size(currentLane,1);
+        subplot(1,3,counterLane)
+        for counterTimeP=1:numObjects
+            text(currentLane(counterTimeP,1),currentLane(counterTimeP,3),labelsObjects{counterLane},'fontsize',6,'color','r')
+        end
+        %    subplot(131)
+        axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 max(temporalResults2(:,3))+3])
+        axis ij
+        ylabel('Time [sec]')
+        xlabel('Position [m]')
+        grid on
+    
+    for counterLane = 2:3
+        selectLane      = temporalResults2(:,2)==counterLane;
+        currentLane     = temporalResults2(selectLane,:);
+        numObjects      = size(currentLane,1);
+        subplot(1,3,counterLane)
+        for counterTimeP=1:numObjects
+%             text(currentLane(counterTimeP,1),currentLane(counterTimeP,3),strcat(labelsObjects{counterLane},13,num2str(currentLane(counterTimeP,5))),'fontsize',6,'color',coloursObjects{counterLane})
+          %  text(currentLane(counterTimeP,1),currentLane(counterTimeP,3),strcat(labelsObjects{counterLane}),'fontsize',6,'color',coloursObjects{counterLane})
+            text(currentLane(counterTimeP,1),0.65+currentLane(counterTimeP,3),strcat(num2str(currentLane(counterTimeP,5))),'fontsize',6,'color',coloursObjects{counterLane})
+        end
+        %    subplot(131)
+        axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 max(temporalResults2(:,3))+3])
+        axis ij
+        ylabel('Time [sec]')
+        xlabel('Position [m]')
+        grid on
+    end
+    %     subplot(132)
+    %     axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 numTimePoints+3])
+    %     axis ij
+    %     ylabel('Time [sec]')
+    %     xlabel('Position [m]')
+    %         grid on
+    %     subplot(133)
+    %     axis([-5+min([(temporalResults{:,4})])  5+max([(temporalResults{:,4})]) 0 numTimePoints+3])
+    %     axis ij
+    %     ylabel('Time [sec]')
+    %     xlabel('Position [m]')
+    %     grid on
+end
 
     %% save the movie as a GIF
     [imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
