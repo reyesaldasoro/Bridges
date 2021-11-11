@@ -14,6 +14,10 @@ currLabel       = [0; cumsum(diff(a)>0.5)];
 
 qq=[currLabel currLabel currLabel ]/max(currLabel);
 
+figure(20)
+%plot(temporalResults2(selectT,1),temporalResults2(selectT,3)+0.13*temporalResults2(selectT,1),'ro');axis ij
+plot(currentLane(:,1),currentLane(:,3),'o');axis ij
+
 figure(21)
 %plot(temporalResults2(selectT,1),temporalResults2(selectT,3)+0.13*temporalResults2(selectT,1),'ro');axis ij
 plot(currentLane(:,1),currentLane(:,3)+tilt*currentLane(:,1),'o');axis ij
@@ -21,6 +25,9 @@ plot(currentLane(:,1),currentLane(:,3)+tilt*currentLane(:,1),'o');axis ij
 figure(22)
 plot(currentLane(b,1),a,'r-o');axis ij
 figure(23)
-plot(cumsum(diff(a)>0.5),'r-o');
+labelLane2       = 1+[0; cumsum(diff(a)>0.5)]
+%plot(cumsum(diff(a)>0.5),'r-o');
+
+plot(labelLane2,'r-o');
 grid on
 sum(diff(a)>0.5)
