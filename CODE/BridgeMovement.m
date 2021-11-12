@@ -148,7 +148,7 @@ selectLane3      = temporalResults2(:,2)==3; tilt=-0.16;
 currentLane     = temporalResults2(selectLane3,:);
 currentLane_tilt = currentLane(:,3)+tilt*currentLane(:,1);
 [a,b]           = sort(currentLane_tilt);
-labelLane3       = max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
+labelLane3       = 1+ max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
 currentLane(b,5) = labelLane3; 
 
 %temporalResults2(selectLane3,5)= labelLane3;
