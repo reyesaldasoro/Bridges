@@ -121,42 +121,100 @@ for k=videoHandle.FrameRate/selectRate:videoHandle.FrameRate/selectRate:numFrame
     temporalResults{k2,4} = round(currentPosX);
     temporalResults{k2,5} = round(currentPosY);
     temporalResults{k2,6} = currentTypeObj;
-
-
-         % Area
-         temporalResults{k2,7} = currentObjects;
+    
+    
+    % Area
+    temporalResults{k2,7} = currentObjects;
     %     % position x pixels
-         temporalResults{k2,8} = currentCentroids(1:2:end);
+    temporalResults{k2,8} = currentCentroids(1:2:end);
     %     % Position y pixels
-         temporalResults{k2,9} = currentCentroids(2:2:end);
-         
-             k2=k2+1;
+    temporalResults{k2,9} = currentCentroids(2:2:end);
+    
+    k2=k2+1;
 
 end
 %% Assign labels to cars
 
 
-selectLane2      = temporalResults2(:,2)==2;tilt = 0.15;
-currentLane     = temporalResults2(selectLane2,:);
-currentLane_tilt = currentLane(:,3)+tilt*currentLane(:,1);
-[a,b]           = sort(currentLane_tilt);
-labelLane2       = 1+[0; cumsum(diff(a)>0.5)];
-currentLane(b,5) = labelLane2; 
+selectLane2         = temporalResults2(:,2)==2;tilt = 0.15;
+currentLane         = temporalResults2(selectLane2,:);
+currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
+[a,b]               = sort(currentLane_tilt);
+labelLane2          = 1+[0; cumsum(diff(a)>0.5)];
+currentLane(b,5)    = labelLane2; 
 temporalResults2(selectLane2,5)= currentLane(:,5);
 
-selectLane3      = temporalResults2(:,2)==3; tilt=-0.16;
-currentLane     = temporalResults2(selectLane3,:);
-currentLane_tilt = currentLane(:,3)+tilt*currentLane(:,1);
-[a,b]           = sort(currentLane_tilt);
-labelLane3       = 1+ max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
-currentLane(b,5) = labelLane3; 
+selectLane3         = temporalResults2(:,2)==3; tilt=-0.16;
+currentLane         = temporalResults2(selectLane3,:);
+currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
+[a,b]               = sort(currentLane_tilt);
+labelLane3          = 1+ max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
+currentLane(b,5)    = labelLane3; 
 
 %temporalResults2(selectLane3,5)= labelLane3;
 temporalResults2(selectLane3,5)= currentLane(:,5);
 
+%% Save as .txt  files
+% Create the folders
+if  isempty(dir('traffic'))
+    mkdir traffic
+end
+if isempty(dir(strcat('traffic',filesep,'record0')))
+    mkdir (strcat('traffic',filesep,'record0'))
+    mkdir (strcat('traffic',filesep,'record0_O'))
+end
+cars_going_right        = temporalResults2(temporalResults2(:,2)==3,:);
+cars_going_left         = temporalResults2(temporalResults2(:,2)==2,:);
+cars_going_right_labels = unique(cars_going_right(:,5));
+cars_going_left_labels  = unique(cars_going_left(:,5));
+num_cars_going_left     = numel(cars_going_left_labels);
+num_cars_going_right    = numel(cars_going_right_labels);
 
 
-%
+
+%% Create the files
+% first, files with the numbers 
+file_Ncars0     = strcat('traffic',filesep,'record0',filesep,'Ncars_NLGV_NHGV_record0.txt');
+file_Ncars0_O   = strcat('traffic',filesep,'record0_O',filesep,'Ncars_NLGV_NHGV_record0.txt');
+writecell({num_cars_going_right;0;0},file_Ncars0)
+writecell({num_cars_going_left;0;0},file_Ncars0_O)
+
+% Now the files per car
+for counter_right    = 1:num_cars_going_right
+    clear data
+    current_file    = strcat('traffic',filesep,'record0',filesep,'timexy_car',num2str(counter_right),'_record0.txt');
+    current_car     = cars_going_right_labels(counter_right);
+    current_car_t   = 1*cars_going_right(cars_going_right(:,5)==current_car,3);
+    current_car_x   = cars_going_right(cars_going_right(:,5)==current_car,1);
+    %data = [current_car_t current_car_x zeros(size(current_car_t))];
+    for counter_steps = 1:  numel(current_car_t)
+        
+        data{counter_steps,1} = compose("%.2f",current_car_t(counter_steps));
+        data{counter_steps,2} = current_car_x(counter_steps);
+        data{counter_steps,3} = 0;
+    end
+    writecell(data,current_file,'Delimiter',' ')
+end
+for counter_left    = 1:num_cars_going_left
+    clear data
+    current_file    = strcat('traffic',filesep,'record0_O',filesep,'timexy_car',num2str(counter_left),'_record0.txt');
+    current_car     = cars_going_left_labels(counter_left);
+    current_car_t   = 1*cars_going_left(cars_going_left(:,5)==current_car,3);
+    current_car_x   = cars_going_left(cars_going_left(:,5)==current_car,1);
+    %data = [current_car_t current_car_x zeros(size(current_car_t))];
+    %data{counter_left,1} =[current_car_t current_car_x zeros(size(current_car_t))];
+    for counter_steps = 1:  numel(current_car_t)
+        
+        data{counter_steps,1} = compose("%.2f",current_car_t(counter_steps));
+        data{counter_steps,2} = current_car_x(counter_steps);
+        data{counter_steps,3} = 0;
+    end
+    writecell(data,current_file,'Delimiter',' ')
+end
+
+
+
+%%
 % if toDisplay==1
 %     figure(7)
 %     clf
@@ -217,6 +275,8 @@ temporalResults2(selectLane3,5)= currentLane(:,5);
 
 
 %
+ 
+    
 if toDisplay==1
     figure(10)
     clf
@@ -229,7 +289,7 @@ if toDisplay==1
           selectLane      = temporalResults2(:,2)==counterLane;
         currentLane     = temporalResults2(selectLane,:);
         numObjects      = size(currentLane,1);
-        subplot(1,3,counterLane)
+        hh(counterLane) =subplot(1,3,counterLane);
         for counterTimeP=1:numObjects
             text(currentLane(counterTimeP,1),currentLane(counterTimeP,3),labelsObjects{counterLane},'fontsize',5,'color','r')
         end
@@ -244,7 +304,7 @@ if toDisplay==1
         selectLane      = temporalResults2(:,2)==counterLane;
         currentLane     = temporalResults2(selectLane,:);
         numObjects      = size(currentLane,1);
-        subplot(1,3,counterLane)
+        hh(counterLane) =subplot(1,3,counterLane);
         for counterTimeP=1:numObjects
             %             text(currentLane(counterTimeP,1),currentLane(counterTimeP,3),strcat(labelsObjects{counterLane},13,num2str(currentLane(counterTimeP,5))),'fontsize',6,'color',coloursObjects{counterLane})
             %  text(currentLane(counterTimeP,1),currentLane(counterTimeP,3),strcat(labelsObjects{counterLane}),'fontsize',6,'color',coloursObjects{counterLane})
@@ -287,6 +347,18 @@ if toDisplay==1
     %     xlabel('Position [m]')
     %     grid on
 end
+%%
+h0=gcf;
+h0.Position = [200 200 1200 400];
+hh(1).Position = [    0.04    0.12    0.29    0.8];
+hh(2).Position = [    0.37    0.12    0.29    0.8];
+hh(3).Position = [    0.7    0.12    0.29    0.8];
+
+hh(1).Title.String='(a)';% Pedestrians';
+hh(2).Title.String='(b)';%Vehicles traveling to the left';
+hh(3).Title.String='(c)';%Vehicles traveling to the right';
+
+
 
     %% save the movie as a GIF
     [imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
