@@ -13,25 +13,22 @@ else
 
     cd('C:\Users\sbbk034\OneDrive - City, University of London\Documents\GitHub\Bridges\CODE')
     dir0 = ('C:\Users\sbbk034\OneDrive - City, University of London\Acad\Research\AlfredoCamara\');
-
 end
+%% Detect Videos in Folder
 
-%% Input from the separate frames
-%dir0  = dir ('BridgeTraffic/Br*.png');
-%numFrames = size(dir0,1);
+dir_videos      = dir(strcat(dir0,'*.mov'));
 
-%% Read data directly from a website ???
-% MATLAB Support Package for IP Cameras 
-% open Add-On Explorer and install
-%cam = ipcam('https://v.angelcam.com/iframe?v=v40le5pnl5&token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW4iOiJvbG5lLmdyIiwiY2FtZXJhX2lkIjo1OTI0LCJleHAiOjE2MzQ4OTI0OTN9.Fbysjs3JHLANS8pSQ8a-JbsPjESb8HXVb7Fu9js1TXk');
-%cam = inputvideo('https://www.youtube.com/watch?v=F3R97syoK40');
-
-%cam = VideoReader('https://v.angelcam.com/iframe?v=v40le5pnl5&token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW4iOiJvbG5lLmdyIiwiY2FtZXJhX2lkIjo1OTI0LCJleHAiOjE2MzQ4OTI0OTN9.Fbysjs3JHLANS8pSQ8a-JbsPjESb8HXVb7Fu9js1TXk');
-
-
-%preview(cam) %dislay the images
 %% Alternative input from the video
-[allFrames,medImage,stdImage,videoHandle] = readVideoBridge(strcat(dir0,'BridgeTraffic.mov'));
+currentVideo                                = strcat(dir0,dir_videos(2).name);
+videoHandle                                 = VideoReader(currentVideo);
+%%%%% Assuming that the frame rate is 60 frames per second  %%%%%
+% To select all frames     stepBetweenFrames = 1
+% To select one per second stepBetweenFrames = 60
+
+stepBetweenFrames = 60; 
+
+%[allFrames,medImage,stdImage,videoHandle]  = readVideoBridge(strcat(dir0,'BridgeTraffic.mov'));
+[allFrames,medImage,stdImage]   = readVideoBridge(videoHandle,stepBetweenFrames);
 numFrames = size(allFrames,4);
 
 %% Find the mask of the Bridge from std
@@ -45,7 +42,12 @@ numFrames = size(allFrames,4);
 
 %%
 load laneMasks
+% Scale laneMasks to current video
+[newR,newC,newL]=size(finalBridge);
 
+laneMasks.upper = imresize (laneMasks.upper,[newR newC]);
+laneMasks.lower = imresize (laneMasks.lower,[newR newC]);
+laneMasks.foot = imresize (laneMasks.foot,[newR newC]);
     
 
 toDisplay = 1;
@@ -76,10 +78,18 @@ end
 %%
 k2=1;
 clear temporalResults*
-selectRate = 4;
-temporalResults2 =[];
-% Iterate over the video, grab one frame per second
-for k=videoHandle.FrameRate/selectRate:videoHandle.FrameRate/selectRate:numFrames%numFrames
+
+ 
+initialFrame            = stepBetweenFrames;
+%selectRate              = 1 ;           
+%stepFrames              = videoHandle.FrameRate * selectRate;
+temporalResults2        = [];
+% Iterate over the video, grab one frame 
+
+%for k = initialFrame:stepBetweenFrames:numFrames   %)/videoHandle.FrameRate
+for k = 1:numFrames   %)/videoHandle.FrameRate
+
+%for k=stepFrames:stepBetweenFrames:numFrames   %numFrames
     %
 
     disp(k)
