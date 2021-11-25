@@ -3,6 +3,10 @@
 clear all
 close all
 clc
+
+%% Data source
+
+% https://olne.gr/el/evripos-bridge/evripos-bridge-live-stream
 %% Prepare folders
 if strcmp(filesep,'/')
     % Running in Mac
@@ -19,7 +23,7 @@ end
 dir_videos      = dir(strcat(dir0,'*.mov'));
 
 %% Alternative input from the video
-currentVideo                                = strcat(dir0,dir_videos(2).name);
+currentVideo                                = strcat(dir0,dir_videos(3).name);
 videoHandle                                 = VideoReader(currentVideo);
 %%%%% Assuming that the frame rate is 60 frames per second  %%%%%
 % To select all frames     stepBetweenFrames = 1
@@ -40,14 +44,17 @@ numFrames = size(allFrames,4);
 
 [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,1),stdImage);
 
+imagesc(finalBridge)
+
 %%
-load laneMasks
+%load laneMasks
+load laneMasks_2021_11_19_1110
 % Scale laneMasks to current video
 [newR,newC,newL]=size(finalBridge);
 
 laneMasks.upper = imresize (laneMasks.upper,[newR newC]);
 laneMasks.lower = imresize (laneMasks.lower,[newR newC]);
-laneMasks.foot = imresize (laneMasks.foot,[newR newC]);
+laneMasks.foot  = imresize (laneMasks.foot,[newR newC]);
     
 
 toDisplay = 1;
