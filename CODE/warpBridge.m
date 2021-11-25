@@ -30,6 +30,7 @@ lines               = houghlines(maskBridge,thetaH,rhoT,hPeaks,'FillGap',5,'MinL
 %%
 % Correction for video of 2017
 %T                   = projective2d([1 -0.001 -0.0011; 0.194 1 0.001 ; 0 0 1]);
+% Correction suitable for BridgeTraffic_2021_11_19_1110
 T                   = projective2d([1 -0.041 -0.0011; 0.194 1 0.001 ; 0 0 1]);
 
 warpedBridge        = imwarp(currentImage/255,(T));
