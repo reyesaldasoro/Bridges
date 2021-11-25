@@ -28,8 +28,9 @@ lines               = houghlines(maskBridge,thetaH,rhoT,hPeaks,'FillGap',5,'MinL
 %finalWidth          = mdl.Fitted(end);
 %rotatedBridge       = (imrotate(medImage/255,-180+hPeaks(2)));
 %%
-
-T                   = projective2d([1 -0.001 -0.0011; 0.194 1 0.001 ; 0 0 1]);
+% Correction for video of 2017
+%T                   = projective2d([1 -0.001 -0.0011; 0.194 1 0.001 ; 0 0 1]);
+T                   = projective2d([1 -0.041 -0.0011; 0.194 1 0.001 ; 0 0 1]);
 
 warpedBridge        = imwarp(currentImage/255,(T));
 warpedMedImage      = imwarp(medImage/255,(T));
@@ -42,6 +43,7 @@ warpedStd           = imwarp(stdImage,T);
 % subplot(312)
 % imagesc(warpedBridge.*repmat(1-warpedLine,[1 1 3]))
 
+%%
 avWidthPerColumnW    =   sum(warpedMask);
 %baseColumnsW         = 1:numel(avWidthPerColumnW);
 initialCol          = find(sum(warpedLine),1,'first');
