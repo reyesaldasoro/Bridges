@@ -17,22 +17,24 @@ footObjects0     = imopen(currentThresholded.*laneMasks.foot,ones(1,2));
 [footObjects1 ,numFoot]     = bwlabel(imopen(imclose(footObjects0,ones(3,2)),ones(3)));
 
  % remove objects that are close to edges
-edgeFromRight               = 150;
+edgeFromRight               = 50;
+edgeFromLeft                = 100;
+minSizeCar                  = 85;
 lowerObjects_P              = regionprops(lowerObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
 lowerObjects_bBox           = (reshape([lowerObjects_P.BoundingBox],4,numLower))';
-lowerObjects_onEdge1        = ((lowerObjects_bBox(:,1)<edgeFromRight)|((lowerObjects_bBox(:,1)+lowerObjects_bBox(:,3))>(cols-200)));
+lowerObjects_onEdge1        = ((lowerObjects_bBox(:,1)<edgeFromRight)|((lowerObjects_bBox(:,1)+lowerObjects_bBox(:,3))>(cols-edgeFromLeft)));
 
-[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find(  (lowerObjects_onEdge1'==0) &([lowerObjects_P.Area]>85) )));
+[lowerObjects2,numLower]    = bwlabel(ismember(lowerObjects1,find(  (lowerObjects_onEdge1'==0) &([lowerObjects_P.Area]>minSizeCar) )));
 
 upperObjects_P              = regionprops(upperObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
 upperObjects_bBox           = (reshape([upperObjects_P.BoundingBox],4,numUpper))';
-upperObjects_onEdge1        = ((upperObjects_bBox(:,1)<edgeFromRight)|((upperObjects_bBox(:,1)+upperObjects_bBox(:,3))>(cols-200)));
+upperObjects_onEdge1        = ((upperObjects_bBox(:,1)<edgeFromRight)|((upperObjects_bBox(:,1)+upperObjects_bBox(:,3))>(cols-edgeFromLeft)));
 
-[upperObjects2,numUpper]    = bwlabel(ismember(upperObjects1,find(   (upperObjects_onEdge1'==0)   &([upperObjects_P.Area]>85) )));
+[upperObjects2,numUpper]    = bwlabel(ismember(upperObjects1,find(   (upperObjects_onEdge1'==0)   &([upperObjects_P.Area]>minSizeCar) )));
 
 footObjects_P              = regionprops(footObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
 footObjects_bBox           = (reshape([footObjects_P.BoundingBox],4,numFoot))';
-footObjects_onEdge1        = ((footObjects_bBox(:,1)<edgeFromRight)|((footObjects_bBox(:,1)+footObjects_bBox(:,3))>(cols-200)));
+footObjects_onEdge1        = ((footObjects_bBox(:,1)<edgeFromRight)|((footObjects_bBox(:,1)+footObjects_bBox(:,3))>(cols-edgeFromLeft)));
 
 [footObjects2,numFoot]     = bwlabel(ismember(footObjects1,find(  (footObjects_onEdge1'==0) &  ([footObjects_P.Area]>35))));
 
