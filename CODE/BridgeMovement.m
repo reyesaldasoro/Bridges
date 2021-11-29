@@ -23,7 +23,7 @@ end
 dir_videos      = dir(strcat(dir0,'*.mov'));
 
 %% Alternative input from the video
-currentVideo                                = strcat(dir0,dir_videos(3).name);
+currentVideo                                = strcat(dir0,dir_videos(13).name);
 videoHandle                                 = VideoReader(currentVideo);
 %%%%% Assuming that the frame rate is 60 frames per second  %%%%%
 % To select all frames     stepBetweenFrames = 1
