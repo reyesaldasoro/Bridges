@@ -20,6 +20,7 @@ footObjects0     = imopen(currentThresholded.*laneMasks.foot,ones(1,2));
 edgeFromRight               = 50;
 edgeFromLeft                = 100;
 minSizeCar                  = 85;
+minSizePerson               = 85;
 lowerObjects_P              = regionprops(lowerObjects1(:,end:-1:1),'Area','orientation','Centroid','boundingbox');
 lowerObjects_bBox           = (reshape([lowerObjects_P.BoundingBox],4,numLower))';
 lowerObjects_onEdge1        = ((lowerObjects_bBox(:,1)<edgeFromRight)|((lowerObjects_bBox(:,1)+lowerObjects_bBox(:,3))>(cols-edgeFromLeft)));
@@ -36,7 +37,7 @@ footObjects_P              = regionprops(footObjects1(:,end:-1:1),'Area','orient
 footObjects_bBox           = (reshape([footObjects_P.BoundingBox],4,numFoot))';
 footObjects_onEdge1        = ((footObjects_bBox(:,1)<edgeFromRight)|((footObjects_bBox(:,1)+footObjects_bBox(:,3))>(cols-edgeFromLeft)));
 
-[footObjects2,numFoot]     = bwlabel(ismember(footObjects1,find(  (footObjects_onEdge1'==0) &  ([footObjects_P.Area]>35))));
+[footObjects2,numFoot]     = bwlabel(ismember(footObjects1,find(  (footObjects_onEdge1'==0) &  ([footObjects_P.Area]>minSizePerson))));
 
 
 
