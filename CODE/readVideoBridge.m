@@ -13,9 +13,11 @@ else
     v           = BridgeVideo;
 end
 try
-    numFrames   = floor(v.NumFrames                / stepBetweenFrames);
+    numFrames       = floor(v.NumFrames                / stepBetweenFrames);
+    numIterations   = v.NumFrames;
 catch
-    numFrames   = floor(v.Duration*v.FrameRate     / stepBetweenFrames);
+    numFrames       = floor(v.Duration*v.FrameRate     / stepBetweenFrames);
+    numIterations   = v.Duration*v.FrameRate;
 end
     
 firstFrame = read(v,1);
@@ -46,7 +48,7 @@ bChannel(rows,cols,numFrames)=0;
 % end
 
 
-for    k= 1 : numFrames
+for    k= 1 : numIterations
     currImage = read(v,k);
 %    disp(k)
      if mod(k,stepBetweenFrames)==0
