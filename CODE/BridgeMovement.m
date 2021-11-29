@@ -23,7 +23,7 @@ end
 dir_videos      = dir(strcat(dir0,'*.mov'));
 
 %% Alternative input from the video
-currentVideo                                = strcat(dir0,dir_videos(13).name);
+currentVideo                                = strcat(dir0,dir_videos(14).name);
 videoHandle                                 = VideoReader(currentVideo);
 %%%%% Assuming that the frame rate is 60 frames per second  %%%%%
 % To select all frames     stepBetweenFrames = 1
@@ -42,13 +42,15 @@ numFrames = size(allFrames,4);
 %% find the main orientation of the bridge
 %[finalBridge,finalMedImage,finalMask,finalLine]  = warpBridge(maskBridge,medImage,medImage);
 
-[finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,allFrames(:,:,:,1),stdImage);
+[finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd,finalMetrics] = warpBridge(maskBridge,medImage,allFrames(:,:,:,1),stdImage);
 
 imagesc(finalBridge)
 
 %%
 %load laneMasks
-load laneMasks_2021_11_19_1110
+%load laneMasks_2021_11_19_1110
+load laneMasks_2021_11_29_1124
+
 % Scale laneMasks to current video
 [newR,newC,newL]=size(finalBridge);
 
@@ -100,7 +102,7 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
     %
 
     disp(k)
-    [finalBridge]       = warpBridge(maskBridge,medImage,allFrames(:,:,:,k),stdImage);
+    [finalBridge]       = warpBridge2(allFrames(:,:,:,k),finalMetrics);
     currentDifference   = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
     thresObject         = graythresh(currentDifference);
     
