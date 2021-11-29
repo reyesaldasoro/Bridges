@@ -110,45 +110,55 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
 
     [segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
 
+    if isempty(segmentedObjects_P)
+        segmentedObjects(1,1)=1;
+    end
+    
     if toDisplay==1
         h11.CData     = (allFrames(:,:,:,k)/255);
-        h22.CData     = (finalBridge);
+        h22.CData     = (finalBridge);        
         h33.CData     = (segmentedObjects);
         drawnow
         F(k2)       = getframe(h0);
     end
-    currentObjects      = [segmentedObjects_P.Area];
-    currentCentroids    = [segmentedObjects_P.Centroid];
-    currentPosX         = [segmentedObjects_P.positionX];
-    currentPosY         = [segmentedObjects_P.positionY];
-    currentWeights      = [segmentedObjects_P.weight];
-    currentTypeObj      = {segmentedObjects_P.typeObj};
-    
-    % Store in 2 ways, one a cell per time point, 
-    % one a single matrix with x,y,area,weight
-    numCurrentObjects = numel(currentObjects);
-    temporalResults2=[temporalResults2;[round(currentPosX') round(currentPosY') repmat(k/videoHandle.FrameRate,[numCurrentObjects 1]) currentWeights' ]];
-    
-    % time
-    temporalResults{k2,1} = k/videoHandle.FrameRate;
-    % num Objects
-    temporalResults{k2,2} = numCurrentObjects;
-    %temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
-    % weight
-    temporalResults{k2,3} = round(currentWeights);
-    % position metres from left edge
-    temporalResults{k2,4} = round(currentPosX);
-    temporalResults{k2,5} = round(currentPosY);
-    temporalResults{k2,6} = currentTypeObj;
     
     
-    % Area
-    temporalResults{k2,7} = currentObjects;
-    %     % position x pixels
-    temporalResults{k2,8} = currentCentroids(1:2:end);
-    %     % Position y pixels
-    temporalResults{k2,9} = currentCentroids(2:2:end);
-    
+    % only record if there are objects
+    if ~isempty(segmentedObjects_P)
+        
+        currentObjects      = [segmentedObjects_P.Area];
+        currentCentroids    = [segmentedObjects_P.Centroid];
+        currentPosX         = [segmentedObjects_P.positionX];
+        currentPosY         = [segmentedObjects_P.positionY];
+        currentWeights      = [segmentedObjects_P.weight];
+        
+        currentTypeObj      = {segmentedObjects_P.typeObj};
+        
+        % Store in 2 ways, one a cell per time point,
+        % one a single matrix with x,y,area,weight
+        numCurrentObjects = numel(currentObjects);
+        temporalResults2=[temporalResults2;[round(currentPosX') round(currentPosY') repmat(k/videoHandle.FrameRate,[numCurrentObjects 1]) currentWeights' ]];
+        
+        % time
+        temporalResults{k2,1} = k/videoHandle.FrameRate;
+        % num Objects
+        temporalResults{k2,2} = numCurrentObjects;
+        %temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
+        % weight
+        temporalResults{k2,3} = round(currentWeights);
+        % position metres from left edge
+        temporalResults{k2,4} = round(currentPosX);
+        temporalResults{k2,5} = round(currentPosY);
+        temporalResults{k2,6} = currentTypeObj;
+        
+        
+        % Area
+        temporalResults{k2,7} = currentObjects;
+        %     % position x pixels
+        temporalResults{k2,8} = currentCentroids(1:2:end);
+        %     % Position y pixels
+        temporalResults{k2,9} = currentCentroids(2:2:end);
+    end
     k2=k2+1;
 
 end
