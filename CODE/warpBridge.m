@@ -1,7 +1,7 @@
-function [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd] = warpBridge(maskBridge,medImage,currentImage,stdImage)
+function [finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd,finalMetrics] = warpBridge(maskBridge,medImage,currentImage,stdImage)
 
 
-centralLineBridge   = bwmorph(bwmorph(maskBridge,'thin','inf'),'spur',35);
+centralLineBridge   = bwmorph(bwmorph(maskBridge,'thin','inf'),'spur',15);
 [HT,thetaH,rhoT]    = hough(centralLineBridge);
 hPeaks              = houghpeaks(HT,1);
 lines               = houghlines(maskBridge,thetaH,rhoT,hPeaks,'FillGap',5,'MinLength',7);
@@ -31,8 +31,9 @@ lines               = houghlines(maskBridge,thetaH,rhoT,hPeaks,'FillGap',5,'MinL
 % Correction for video of 2017
 %T                   = projective2d([1 -0.001 -0.0011; 0.194 1 0.001 ; 0 0 1]);
 % Correction suitable for BridgeTraffic_2021_11_19_1110
-T                   = projective2d([1 -0.041 -0.0011; 0.194 1 0.001 ; 0 0 1]);
-
+%T                   = projective2d([1 -0.041 -0.0011; 0.194 1 0.001 ; 0 0 1]);
+% Correction suitable for BridgeTraffic_2021_11_29_1124
+T                   = projective2d([1 -0.031 -0.0011; 0.194 1 0.001 ; 0 0 1]);
 warpedBridge        = imwarp(currentImage/255,(T));
 warpedMedImage      = imwarp(medImage/255,(T));
 warpedMask          = imwarp(maskBridge,(T));
@@ -48,7 +49,7 @@ warpedStd           = imwarp(stdImage,T);
 avWidthPerColumnW    =   sum(warpedMask);
 %baseColumnsW         = 1:numel(avWidthPerColumnW);
 initialCol          = find(sum(warpedLine),1,'first');
-finalCol            = find(sum(warpedLine),1,'last');
+finalCol            = 30 +find(sum(warpedLine),1,'last');
 [~,centralRow]      = max(sum(warpedLine,2));
 %baseColumnsW         = initialCol:finalCol;
 %excludeColumnsW      = imdilate(avWidthPerColumnW==0,ones(21));
@@ -62,6 +63,11 @@ finalMedImage           = warpedMedImage(centralRow-widthMaskW:centralRow+widthM
 finalMask               = warpedMask(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
 finalCentralLine        = warpedLine(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
 finalStd                = warpedStd(centralRow-widthMaskW:centralRow+widthMaskW,initialCol:finalCol,:);
+
+finalMetrics.initialCol     = initialCol;
+finalMetrics.finalCol     = finalCol;
+finalMetrics.centralRow     = centralRow;
+finalMetrics.widthMaskW     = widthMaskW;
 
 
 
