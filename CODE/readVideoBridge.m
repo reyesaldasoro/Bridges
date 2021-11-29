@@ -46,7 +46,7 @@ bChannel(rows,cols,numFrames)=0;
 % end
 
 
-for    k= 1 : v.numFrames
+for    k= 1 : numFrames
     currImage = read(v,k);
 %    disp(k)
      if mod(k,stepBetweenFrames)==0
