@@ -248,23 +248,25 @@ end
 
 
 
+%% Save movie as mp4
+output_video = VideoWriter('traffic_2021_12_01', 'MPEG-4');
+open(output_video);
+writeVideo(output_video,F);
+close(output_video);
+
+%% save the movie as a GIF only 200 frames as it is a bit long
+[imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
+%numFrames = size(F,2);
+
+numFramesToProcess = 200;
+imGif(1,1,1,numFramesToProcess) = 0;
+for k = 2:numFramesToProcess
+    imGif(:,:,1,k) = rgb2ind(F(k).cdata,mapGif,'nodither');
+end
 %%
-            output_video = VideoWriter('traffic_2021_12_01', 'MPEG-4');
-            open(output_video);
-            writeVideo(output_video,F);
-            close(output_video);
-    %% save the movie as a GIF
-    [imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
-    numFrames = size(F,2);
 
-    imGif(1,1,1,numFrames) = 0;
-    for k = 2:numFrames 
-      imGif(:,:,1,k) = rgb2ind(F(k).cdata,mapGif,'nodither');
-    end
-    %%
-
-    imwrite(imGif,mapGif,'BridgeMovement_6.gif',...
-            'DelayTime',0,'LoopCount',inf) %g443800
+imwrite(imGif,mapGif,'traffic_2021_12_01.gif',...
+    'DelayTime',0,'LoopCount',inf) %g443800
         
         
 
