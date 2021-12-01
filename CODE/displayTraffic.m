@@ -1,4 +1,4 @@
-if toDisplay==1
+
     figure(7)
     clf
     h1=gca;
@@ -16,4 +16,3 @@ if toDisplay==1
     axis ij
     ylabel('Time [sec]')
     xlabel('Position [m]')
-end
