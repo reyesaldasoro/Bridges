@@ -30,6 +30,8 @@ videoHandle                                 = VideoReader(currentVideo);
 % To select one per second stepBetweenFrames = 60
 
 stepBetweenFrames = 60; 
+stepBetweenFrames = 15; 
+
 
 %[allFrames,medImage,stdImage,videoHandle]  = readVideoBridge(strcat(dir0,'BridgeTraffic.mov'));
 [allFrames,medImage,stdImage]   = readVideoBridge(videoHandle,stepBetweenFrames);
@@ -49,7 +51,8 @@ imagesc(finalBridge)
 %%
 %load laneMasks
 %load laneMasks_2021_11_19_1110
-load laneMasks_2021_11_29_1124
+%load laneMasks_2021_11_29_1124
+load laneMasks_2021_11_30_1124b
 
 % Scale laneMasks to current video
 [newR,newC,newL]=size(finalBridge);
@@ -87,6 +90,7 @@ end
 %%
 k2=1;
 clear temporalResults*
+clear F;
 
  
 initialFrame            = stepBetweenFrames;
@@ -137,7 +141,8 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
         % Store in 2 ways, one a cell per time point,
         % one a single matrix with x,y,area,weight
         numCurrentObjects = numel(currentObjects);
-        temporalResults2=[temporalResults2;[round(currentPosX') round(currentPosY') repmat(k/videoHandle.FrameRate,[numCurrentObjects 1]) currentWeights' ]];
+%        temporalResults2=[temporalResults2;[round(currentPosX') round(currentPosY') repmat(k/videoHandle.FrameRate,[numCurrentObjects 1]) currentWeights' ]];
+        temporalResults2=[temporalResults2;[round(currentPosX') ([segmentedObjects_P.Lane]') repmat(stepBetweenFrames*k/videoHandle.FrameRate,[numCurrentObjects 1]) currentWeights' currentObjects' ]];
         
         % time
         temporalResults{k2,1} = k/videoHandle.FrameRate;
@@ -171,9 +176,9 @@ currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
 [a,b]               = sort(currentLane_tilt);
 labelLane2          = 1+[0; cumsum(diff(a)>0.5)];
 currentLane(b,5)    = labelLane2; 
-temporalResults2(selectLane2,5)= currentLane(:,5);
+temporalResults2(selectLane2,6)= currentLane(:,5);
 
-selectLane3         = temporalResults2(:,2)==3; tilt=-0.16;
+selectLane3         = temporalResults2(:,2)==1; tilt=-0.16;
 currentLane         = temporalResults2(selectLane3,:);
 currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
 [a,b]               = sort(currentLane_tilt);
@@ -181,7 +186,7 @@ labelLane3          = 1+ max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
 currentLane(b,5)    = labelLane3; 
 
 %temporalResults2(selectLane3,5)= labelLane3;
-temporalResults2(selectLane3,5)= currentLane(:,5);
+temporalResults2(selectLane3,6)= currentLane(:,5);
 
 %% Save as .txt  files
 % Create the folders
@@ -192,7 +197,7 @@ if isempty(dir(strcat('traffic',filesep,'record0')))
     mkdir (strcat('traffic',filesep,'record0'))
     mkdir (strcat('traffic',filesep,'record0_O'))
 end
-cars_going_right        = temporalResults2(temporalResults2(:,2)==3,:);
+cars_going_right        = temporalResults2(temporalResults2(:,2)==1,:);
 cars_going_left         = temporalResults2(temporalResults2(:,2)==2,:);
 cars_going_right_labels = unique(cars_going_right(:,5));
 cars_going_left_labels  = unique(cars_going_left(:,5));
@@ -244,7 +249,10 @@ end
 
 
 %%
-
+            output_video = VideoWriter('traffic_2021_12_01', 'MPEG-4');
+            open(output_video);
+            writeVideo(output_video,F);
+            close(output_video);
     %% save the movie as a GIF
     [imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
     numFrames = size(F,2);
