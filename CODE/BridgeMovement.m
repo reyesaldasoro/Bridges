@@ -254,11 +254,11 @@ open(output_video);
 writeVideo(output_video,F);
 close(output_video);
 
-%% save the movie as a GIF only 200 frames as it is a bit long
+%% save the movie as a GIF only 100 frames as it is a bit long
 [imGif,mapGif] = rgb2ind(F(1).cdata,256,'nodither');
 %numFrames = size(F,2);
 
-numFramesToProcess = 200;
+numFramesToProcess = 100;
 imGif(1,1,1,numFramesToProcess) = 0;
 for k = 2:numFramesToProcess
     imGif(:,:,1,k) = rgb2ind(F(k).cdata,mapGif,'nodither');
