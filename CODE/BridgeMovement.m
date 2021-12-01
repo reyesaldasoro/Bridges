@@ -44,7 +44,7 @@ numFrames = size(allFrames,4);
 %% find the main orientation of the bridge
 %[finalBridge,finalMedImage,finalMask,finalLine]  = warpBridge(maskBridge,medImage,medImage);
 
-[finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd,finalMetrics] = warpBridge(maskBridge,medImage,allFrames(:,:,:,1),stdImage);
+[finalBridge,finalMedImage,finalMask,finalCentralLine,finalStd,finalMetrics] = warpBridge(maskBridge,medImage,allFrames(:,:,:,12),stdImage);
 
 imagesc(finalBridge)
 
@@ -73,7 +73,7 @@ if toDisplay ==1
     [segmentedObjects,segmentedObjects_P] = segmentObjectsBridge(currentThresholded,laneMasks);
     h0=figure(4);
     h1      = subplot(121);
-    h11     = imagesc(allFrames(:,:,:,1)/255);
+    h11     = imagesc(allFrames(:,:,:,12)/255);
     h2      = subplot(222);
     h22     = imagesc(finalBridge);
     h3      = subplot(224);
