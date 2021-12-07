@@ -48,6 +48,9 @@ numFrames = size(allFrames,4);
 
 imagesc(finalBridge)
 
+% Explanation of warping
+% http://graphics.cs.cmu.edu/courses/15-463/2006_fall/www/Lectures/warping.pdf
+
 %%
 %load laneMasks
 %load laneMasks_2021_11_19_1110
@@ -66,7 +69,8 @@ toDisplay = 1;
 
 %% Arrange display
 if toDisplay ==1
-    currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));currentDifference=currentDifference/max(currentDifference(:));
+    currentDifference  = (abs(sum(finalBridge,3)- (sum(finalMedImage,3))));
+    currentDifference  = currentDifference/max(currentDifference(:));
     thresObject         = graythresh(currentDifference);
     
     currentThresholded  = (currentDifference>thresObject);
@@ -176,7 +180,7 @@ currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
 [a,b]               = sort(currentLane_tilt);
 labelLane2          = 1+[0; cumsum(diff(a)>0.5)];
 currentLane(b,5)    = labelLane2; 
-temporalResults2(selectLane2,6)= currentLane(:,5);
+temporalResults2(selectLane2,6)= currentLane(:,6);
 
 selectLane3         = temporalResults2(:,2)==1; tilt=-0.16;
 currentLane         = temporalResults2(selectLane3,:);
@@ -186,7 +190,7 @@ labelLane3          = 1+ max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
 currentLane(b,5)    = labelLane3; 
 
 %temporalResults2(selectLane3,5)= labelLane3;
-temporalResults2(selectLane3,6)= currentLane(:,5);
+temporalResults2(selectLane3,6)= currentLane(:,6);
 
 %% Save as .txt  files
 % Create the folders
@@ -199,8 +203,8 @@ if isempty(dir(strcat('traffic',filesep,'record0')))
 end
 cars_going_right        = temporalResults2(temporalResults2(:,2)==1,:);
 cars_going_left         = temporalResults2(temporalResults2(:,2)==2,:);
-cars_going_right_labels = unique(cars_going_right(:,5));
-cars_going_left_labels  = unique(cars_going_left(:,5));
+cars_going_right_labels = unique(cars_going_right(:,6));
+cars_going_left_labels  = unique(cars_going_left(:,6));
 num_cars_going_left     = numel(cars_going_left_labels);
 num_cars_going_right    = numel(cars_going_right_labels);
 
@@ -218,8 +222,8 @@ for counter_right    = 1:num_cars_going_right
     clear data
     current_file    = strcat('traffic',filesep,'record0',filesep,'timexy_car',num2str(counter_right),'_record0.txt');
     current_car     = cars_going_right_labels(counter_right);
-    current_car_t   = 1*cars_going_right(cars_going_right(:,5)==current_car,3);
-    current_car_x   = cars_going_right(cars_going_right(:,5)==current_car,1);
+    current_car_t   = 1*cars_going_right(cars_going_right(:,6)==current_car,3);
+    current_car_x   = cars_going_right(cars_going_right(:,6)==current_car,1);
     %data = [current_car_t current_car_x zeros(size(current_car_t))];
     for counter_steps = 1:  numel(current_car_t)
         
@@ -233,8 +237,8 @@ for counter_left    = 1:num_cars_going_left
     clear data
     current_file    = strcat('traffic',filesep,'record0_O',filesep,'timexy_car',num2str(counter_left),'_record0.txt');
     current_car     = cars_going_left_labels(counter_left);
-    current_car_t   = 1*cars_going_left(cars_going_left(:,5)==current_car,3);
-    current_car_x   = cars_going_left(cars_going_left(:,5)==current_car,1);
+    current_car_t   = 1*cars_going_left(cars_going_left(:,6)==current_car,3);
+    current_car_x   = cars_going_left(cars_going_left(:,6)==current_car,1);
     %data = [current_car_t current_car_x zeros(size(current_car_t))];
     %data{counter_left,1} =[current_car_t current_car_x zeros(size(current_car_t))];
     for counter_steps = 1:  numel(current_car_t)
