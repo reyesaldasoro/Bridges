@@ -201,6 +201,7 @@ if isempty(dir(strcat('traffic',filesep,'record0')))
     mkdir (strcat('traffic',filesep,'record0'))
     mkdir (strcat('traffic',filesep,'record0_O'))
 end
+
 cars_going_right        = temporalResults2(temporalResults2(:,2)==1,:);
 cars_going_left         = temporalResults2(temporalResults2(:,2)==2,:);
 cars_going_right_labels = unique(cars_going_right(:,6));
