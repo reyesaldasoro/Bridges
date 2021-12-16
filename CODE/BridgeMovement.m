@@ -172,8 +172,8 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
 
 end
 %% Assign labels to cars
-
-
+% May have issues with cars too close to each other
+% Tilt so that a car is horizontal and then assign labels vertically
 selectLane2         = temporalResults2(:,2)==2;tilt = 0.15;
 currentLane         = temporalResults2(selectLane2,:);
 currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
