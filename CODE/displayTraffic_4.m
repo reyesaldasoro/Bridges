@@ -26,7 +26,7 @@ hold on
 for k=1:num_cars_going_right
     current_label = cars_going_right_labels(k);
     current_cars = cars_going_right(cars_going_right(:,6)==current_label,:);
-    plot(current_cars(:,1),current_cars(:,3),'*','color',colors_right(k,:))
+    plot(current_cars(:,1),current_cars(:,3),':.','color',colors_right(k,:))
 end
 axis ij
 ylabel('Time [sec]')
@@ -39,7 +39,7 @@ hold on
 for k=1:num_cars_going_left
     current_label = cars_going_left_labels(k);
     current_cars = cars_going_left(cars_going_left(:,6)==current_label,:);
-    plot(current_cars(:,1),current_cars(:,3),'*','color',colors_left(k,:))
+    plot(current_cars(:,1),current_cars(:,3),':.','color',colors_left(k,:))
 end
 % plot(cars_going_left(:,1),cars_going_left(:,3),'.')
 axis ij
@@ -67,7 +67,7 @@ hold on
 for k=1:num_cars_going_right
     current_label = cars_going_right_labels(k);
     current_cars = cars_going_right(cars_going_right(:,6)==current_label,:);
-    plot(current_cars(:,1),current_cars(:,3),'*','color',colors_right(k,:))
+    plot(current_cars(:,1),current_cars(:,3),':.','color',colors_right(k,:))
 end
 axis ij
 %ylabel('Time [sec]')
@@ -80,7 +80,7 @@ hold on
 for k=1:num_cars_going_left
     current_label = cars_going_left_labels(k);
     current_cars = cars_going_left(cars_going_left(:,6)==current_label,:);
-    plot(current_cars(:,1),current_cars(:,3),'*','color',colors_left(k,:))
+    plot(current_cars(:,1),current_cars(:,3),':.','color',colors_left(k,:))
 end
 axis ij
 axis([-sideMargin+min([(temporalResults{:,4})])  sideMargin+max([(temporalResults{:,4})]) 0 max(temporalResults2(:,3))+3])
@@ -113,7 +113,7 @@ h4.YLim = [upperL lowerL];
 
 
 filename='Fig_traffic.png';
-print('-dpng','-r400',filename)
+%print('-dpng','-r400',filename)
 
 
 %%
