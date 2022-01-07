@@ -1,10 +1,10 @@
-figure(12)
+figure(14)
 
 
 cars_going_right        = temporalResults2(temporalResults2(:,2)==1,:);
 cars_going_left         = temporalResults2(temporalResults2(:,2)==2,:);
-cars_going_right_labels = unique(cars_going_right(:,6));
-cars_going_left_labels  = unique(cars_going_left(:,6));
+cars_going_right_labels = unique(cars_going_right(:,7));
+cars_going_left_labels  = unique(cars_going_left(:,7));
 num_cars_going_left     = numel(cars_going_left_labels);
 num_cars_going_right    = numel(cars_going_right_labels);
 
@@ -25,7 +25,7 @@ h1=subplot(141);
 hold on
 for k=1:num_cars_going_right
     current_label = cars_going_right_labels(k);
-    current_cars = cars_going_right(cars_going_right(:,6)==current_label,:);
+    current_cars = cars_going_right(cars_going_right(:,7)==current_label,:);
     plot(current_cars(:,1),current_cars(:,3),':.','color',colors_right(k,:))
 end
 axis ij
@@ -38,7 +38,7 @@ h2=subplot(142);
 hold on
 for k=1:num_cars_going_left
     current_label = cars_going_left_labels(k);
-    current_cars = cars_going_left(cars_going_left(:,6)==current_label,:);
+    current_cars = cars_going_left(cars_going_left(:,7)==current_label,:);
     plot(current_cars(:,1),current_cars(:,3),':.','color',colors_left(k,:))
 end
 % plot(cars_going_left(:,1),cars_going_left(:,3),'.')
@@ -66,7 +66,7 @@ h3=subplot(143);
 hold on
 for k=1:num_cars_going_right
     current_label = cars_going_right_labels(k);
-    current_cars = cars_going_right(cars_going_right(:,6)==current_label,:);
+    current_cars = cars_going_right(cars_going_right(:,7)==current_label,:);
     plot(current_cars(:,1),current_cars(:,3),':.','color',colors_right(k,:))
 end
 axis ij
@@ -79,7 +79,7 @@ h4=subplot(144);
 hold on
 for k=1:num_cars_going_left
     current_label = cars_going_left_labels(k);
-    current_cars = cars_going_left(cars_going_left(:,6)==current_label,:);
+    current_cars = cars_going_left(cars_going_left(:,7)==current_label,:);
     plot(current_cars(:,1),current_cars(:,3),':.','color',colors_left(k,:))
 end
 axis ij
@@ -105,14 +105,21 @@ h4.Title.FontSize =15;
 %upperL=700;
 %lowerL=760;
 
-upperL=602;
-lowerL=690;
+%upperL=602;
+%lowerL=690;
+
+upperL=630;
+lowerL=710;
 
 h3.YLim = [upperL lowerL];
+
+upperL=40;
+lowerL=120;
+
 h4.YLim = [upperL lowerL];
 
 
-filename='Fig_traffic.png';
+filename='Fig_trafficg.png';
 %print('-dpng','-r400',filename)
 
 
