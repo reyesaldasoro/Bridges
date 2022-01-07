@@ -172,25 +172,103 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
 
 end
 %% Assign labels to cars
+% Try with cluster
+
+
+% k1=6501;
+% k2=k1+1000;
+% X=[currentLane(k1:k2,3),0.1*currentLane(k1:k2,1)];
+% Z=linkage(X,'single');
+% %figure(1)
+% %dendrogram(Z)
+% T = cluster(Z,'cutoff',0.5,'Criterion','distance');
+%%
+
+
 % May have issues with cars too close to each other
 % Tilt so that a car is horizontal and then assign labels vertically
-selectLane2         = temporalResults2(:,2)==2;tilt = 0.15;
+selectLane2         = temporalResults2(:,2)==2;tilt = 0.63;
 currentLane         = temporalResults2(selectLane2,:);
 currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
+plot(currentLane(:,3),currentLane(:,1),'.')
+axis([0 100 -2 25])
+%%
 [a,b]               = sort(currentLane_tilt);
-labelLane2          = 1+[0; cumsum(diff(a)>0.5)];
-currentLane(b,5)    = labelLane2; 
-temporalResults2(selectLane2,6)= currentLane(:,6);
+diffTilted          = diff(a);
+labelLane2          = 1+[0; cumsum(diffTilted>0.36)];
+
+% Clean the labels from 
+% A) cases where there are only a few points per track
+maxLabLane          = max(labelLane2);
+[numLab,caseLab]    = hist(labelLane2,(1:maxLabLane));
+medNumLab           = median(numLab(numLab>5));
+% B) large labels, which are most likely two labels joined
+numLab_stand        = numLab./medNumLab;
+% iterate per label
+newLabel=1;
+for k=1:maxLabLane
+    if numLab(k)<5
+        % discard
+        labelLane2 (labelLane2==caseLab(k))=nan;
+    elseif numLab(k)>(1.7*medNumLab)
+        % split
+        largeLabel = find(labelLane2==caseLab(k));
+        numel_LL =numel(largeLabel);
+        for k2 = 1:medNumLab:numel_LL-1
+            labelLane2 (largeLabel(k2:min(numel_LL,k2+medNumLab-1)))= newLabel;
+            newLabel = newLabel+1;
+        end
+    else
+        % none
+        labelLane2 (labelLane2==caseLab(k))= newLabel;
+        newLabel = newLabel+1;
+    end  
+end
+% allocate label
+currentLane(b,7)    = labelLane2;
+temporalResults2(selectLane2,7)= currentLane(:,7);
+
 
 selectLane3         = temporalResults2(:,2)==1; tilt=-0.16;
 currentLane         = temporalResults2(selectLane3,:);
 currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
-[a,b]               = sort(currentLane_tilt);
-labelLane3          = 1+ max(labelLane2)+ [0; cumsum(diff(a)>0.5)];
-currentLane(b,5)    = labelLane3; 
+[a2,b2]               = sort(currentLane_tilt);
+labelLane3          = 1+ max(labelLane3)+ [0; cumsum(diff(a2)>0.36)];
+
+% Clean the labels from 
+% A) cases where there are only a few points per track
+maxLabLane          = max(labelLane3);
+[numLab,caseLab]    = hist(labelLane3,(1:maxLabLane));
+medNumLab           = median(numLab(numLab>5));
+% B) large labels, which are most likely two labels joined
+numLab_stand        = numLab./medNumLab;
+% iterate per label
+newLabel=1;
+for k=1:maxLabLane
+    if numLab(k)<5
+        % discard
+        labelLane3 (labelLane3==caseLab(k))=nan;
+    elseif numLab(k)>(1.7*medNumLab)
+        % split
+        largeLabel = find(labelLane3==caseLab(k));
+        numel_LL =numel(largeLabel);
+        for k2 = 1:medNumLab:numel_LL-1
+            labelLane3 (largeLabel(k2:min(numel_LL,k2+medNumLab-1)))= newLabel;
+            newLabel = newLabel+1;
+        end
+    else
+        % none
+        labelLane3 (labelLane3==caseLab(k))= newLabel;
+        newLabel = newLabel+1;
+    end  
+end
+
+
+
+currentLane(b2,7)    = labelLane3; 
 
 %temporalResults2(selectLane3,5)= labelLane3;
-temporalResults2(selectLane3,6)= currentLane(:,6);
+temporalResults2(selectLane3,7)= currentLane(:,7);
 
 %% Save as .txt  files
 % Create the folders
