@@ -1,5 +1,12 @@
-figure(14)
+figure(12)
+clf
 
+if ~exist('temporalResults2','var')
+    load('temporalResults.mat')
+end
+if size(temporalResults2,2)==6
+temporalResults2(:,7)=temporalResults2(:,6);
+end
 
 cars_going_right        = temporalResults2(temporalResults2(:,2)==1,:);
 cars_going_left         = temporalResults2(temporalResults2(:,2)==2,:);
@@ -108,19 +115,19 @@ h4.Title.FontSize =15;
 %upperL=602;
 %lowerL=690;
 
-upperL=630;
-lowerL=710;
+upperL=615;
+lowerL=720;
 
 h3.YLim = [upperL lowerL];
 
-upperL=40;
+upperL=45;
 lowerL=120;
 
 h4.YLim = [upperL lowerL];
 
-
-filename='Fig_trafficg.png';
-%print('-dpng','-r400',filename)
+%%
+filename='Fig_traffic_2022_01_10.png';
+print('-dpng','-r400',filename)
 
 
 %%
