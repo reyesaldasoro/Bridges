@@ -174,30 +174,35 @@ end
 %% Assign labels to cars
 % Try with cluster
 
+if ~exist('temporalResults2','var')
+    load('temporalResults.mat')
+end
 
-% k1=6501;
-% k2=k1+1000;
-% X=[currentLane(k1:k2,3),0.1*currentLane(k1:k2,1)];
-% Z=linkage(X,'single');
-% %figure(1)
-% %dendrogram(Z)
-% T = cluster(Z,'cutoff',0.5,'Criterion','distance');
 %%
 
 
 % May have issues with cars too close to each other
 % Tilt so that a car is horizontal and then assign labels vertically
-selectLane2         = temporalResults2(:,2)==2;tilt = 0.63;
+selectLane2         = temporalResults2(:,2)==2;tilt = 0.15;
 currentLane         = temporalResults2(selectLane2,:);
 currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
-plot(currentLane(:,3),currentLane(:,1),'.')
-axis([0 100 -2 25])
-%%
+%plot(currentLane(:,3),currentLane(:,1),'.')
+%axis([0 100 -2 25])
+%
 [a,b]               = sort(currentLane_tilt);
 diffTilted          = diff(a);
-labelLane2          = 1+[0; cumsum(diffTilted>0.36)];
+labelLane2          = 1+[0; cumsum(diffTilted>0.5)];
+labelLane2b         = labelLane2;
+%%
 
-% Clean the labels from 
+
+
+% X=[currentLane(:,3),0.1*currentLane(:,1)];
+% Z=linkage(X,'single');
+% %figure(1)
+% %dendrogram(Z)
+% T = cluster(Z,'cutoff',0.5,'Criterion','distance');
+%% Clean the labels from 
 % A) cases where there are only a few points per track
 maxLabLane          = max(labelLane2);
 [numLab,caseLab]    = hist(labelLane2,(1:maxLabLane));
@@ -208,33 +213,67 @@ numLab_stand        = numLab./medNumLab;
 newLabel=1;
 for k=1:maxLabLane
     if numLab(k)<5
+        %disp(k)
         % discard
-        labelLane2 (labelLane2==caseLab(k))=nan;
+        labelLane2b (labelLane2==caseLab(k))=nan;
     elseif numLab(k)>(1.7*medNumLab)
         % split
+        
         largeLabel = find(labelLane2==caseLab(k));
-        numel_LL =numel(largeLabel);
-        for k2 = 1:medNumLab:numel_LL-1
-            labelLane2 (largeLabel(k2:min(numel_LL,k2+medNumLab-1)))= newLabel;
-            newLabel = newLabel+1;
-        end
+        
+        X2 = [currentLane(b(largeLabel),3),0.1*currentLane(b(largeLabel),1)];
+        Z2 = linkage(X2,'single');
+        T2 = cluster(Z2,'MaxClust',round(numLab_stand(k)));
+        labelLane2b (largeLabel)=T2+newLabel-1;
+        newLabel = newLabel+max(T2);
+        %disp(strcat('split',32,num2str(k)))
+        %gscatter(X2(:,1),X2(:,2)*10,T2)
+% %         clustLabels = unique(T(b(largeLabel)));
+% %         clear ordLabs;
+% %         for k2=1:numel(clustLabels)
+% %             ordLabs(k2) = find(T==clustLabels(k2),1);
+% %         end
+% %         [a1,a2]         = sort(ordLabs);
+% %         for k2 = 1:numel(clustLabels)
+% %             labelLane2 (find(T==clustLabels(a2(k2))))=newLabel;
+% %             newLabel = newLabel+1;
+% %                 
+% %         end
+% %         ttt=1;
+% % %         numel_LL =numel(largeLabel);
+% % %         for k2 = 1:medNumLab:numel_LL-1
+% % %             labelLane2 (largeLabel(k2:min(numel_LL,k2+medNumLab-1)))= newLabel;
+% % %             newLabel = newLabel+1;
+% % %         end
+        % Use label from cluster instead of previous
+        
     else
         % none
-        labelLane2 (labelLane2==caseLab(k))= newLabel;
+        % disp(strcat('none',32,num2str(k),'-->',num2str(newLabel)))
+        labelLane2b (labelLane2==caseLab(k))= newLabel;
         newLabel = newLabel+1;
     end  
+    
+    ttt=1;
 end
+
 % allocate label
-currentLane(b,7)    = labelLane2;
+currentLane(b,7)    = labelLane2b;
 temporalResults2(selectLane2,7)= currentLane(:,7);
 
+% X=[currentLane(:,3),0.1*currentLane(:,1)];
+% Z=linkage(X,'single');
+% %figure(1)
+% %dendrogram(Z)
+% T = cluster(Z,'cutoff',0.5,'Criterion','distance');
 
+%%
 selectLane3         = temporalResults2(:,2)==1; tilt=-0.16;
 currentLane         = temporalResults2(selectLane3,:);
 currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
 [a2,b2]               = sort(currentLane_tilt);
-labelLane3          = 1+ max(labelLane3)+ [0; cumsum(diff(a2)>0.36)];
-
+labelLane3          = 1+ max(labelLane2)+ [0; cumsum(diff(a2)>0.5)];
+labelLane3b         = labelLane3;
 % Clean the labels from 
 % A) cases where there are only a few points per track
 maxLabLane          = max(labelLane3);
@@ -246,26 +285,47 @@ numLab_stand        = numLab./medNumLab;
 newLabel=1;
 for k=1:maxLabLane
     if numLab(k)<5
+        disp(k)
         % discard
-        labelLane3 (labelLane3==caseLab(k))=nan;
+        labelLane3b (labelLane3==caseLab(k))=nan;
     elseif numLab(k)>(1.7*medNumLab)
         % split
         largeLabel = find(labelLane3==caseLab(k));
-        numel_LL =numel(largeLabel);
-        for k2 = 1:medNumLab:numel_LL-1
-            labelLane3 (largeLabel(k2:min(numel_LL,k2+medNumLab-1)))= newLabel;
-            newLabel = newLabel+1;
-        end
+        
+        X2 = [currentLane(b2(largeLabel),3),0.1*currentLane(b2(largeLabel),1)];
+        Z2 = linkage(X2,'single');
+        T2 = cluster(Z2,'MaxClust',round(numLab_stand(k)));
+        labelLane3b (largeLabel)=T2+newLabel-1;
+        newLabel = newLabel+max(T2);
+% %         numel_LL =numel(largeLabel);
+% %                largeLabel = find(labelLane3==caseLab(k));
+% %         clustLabels = unique(T(b(largeLabel)));
+% %         clear ordLabs;
+% %         for k2=1:numel(clustLabels)
+% %             ordLabs(k2) = find(T==clustLabels(k2),1);
+% %         end
+% %         [a1,a2]         = sort(ordLabs);
+% %         for k2 = 1:numel(clustLabels)
+% %             labelLane3 (find(T==clustLabels(a2(k2))))=newLabel;
+% %             newLabel = newLabel+1;
+% %                 
+% %         end
+        
+        
+% % %         for k2 = 1:medNumLab:numel_LL-1
+% % %             labelLane3 (largeLabel(k2:min(numel_LL,k2+medNumLab-1)))= newLabel;
+% % %             newLabel = newLabel+1;
+% % %         end
     else
         % none
-        labelLane3 (labelLane3==caseLab(k))= newLabel;
+        labelLane3b (labelLane3==caseLab(k))= newLabel;
         newLabel = newLabel+1;
     end  
 end
 
 
 
-currentLane(b2,7)    = labelLane3; 
+currentLane(b2,7)    = labelLane3b; 
 
 %temporalResults2(selectLane3,5)= labelLane3;
 temporalResults2(selectLane3,7)= currentLane(:,7);
