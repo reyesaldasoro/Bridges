@@ -82,6 +82,8 @@ if toDisplay ==1
     h22     = imagesc(finalBridge);
     h3      = subplot(224);
     h33     = imagesc(segmentedObjects);
+    h2.Title.String=strcat('Time = ',num2str(0),', Frame =',num2str(0));
+
     drawnow
     
     h0.Position = [200 200 1200 400];
@@ -126,6 +128,7 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
         h11.CData     = (allFrames(:,:,:,k)/255);
         h22.CData     = (finalBridge);        
         h33.CData     = (segmentedObjects);
+        h2.Title.String=strcat('Time = ',num2str(stepBetweenFrames*k/videoHandle.FrameRate,'%4.2f'),', Frame =',num2str(k));
         drawnow
         F(k2)       = getframe(h0);
     end
@@ -149,7 +152,7 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
         temporalResults2=[temporalResults2;[round(currentPosX') ([segmentedObjects_P.Lane]') repmat(stepBetweenFrames*k/videoHandle.FrameRate,[numCurrentObjects 1]) currentWeights' currentObjects' ]];
         
         % time
-        temporalResults{k2,1} = k/videoHandle.FrameRate;
+        temporalResults{k2,1} = stepBetweenFrames*k/videoHandle.FrameRate;
         % num Objects
         temporalResults{k2,2} = numCurrentObjects;
         %temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
@@ -178,6 +181,25 @@ if ~exist('temporalResults2','var')
     load('temporalResults.mat')
 end
 
+%% visual observation of all frames determined the following objects are artefacts
+ObjectsToClean = [580 606 613 627 638 655 663 676 1039 1630 1663 1686 1690 1693 1709 1712 1726 ...
+    1746 1751 2432 2638 2644 2650 2666 2689 2709 2714 2720 2725 2730 2867 2914 2918 ...
+    2924 2927 2936 2940 2943 2946 2949 2952 2955 2958 2961 2966 2969 2972 2974 2983 ...
+    2984 2987 2990 2997 3000 3003 3006 3009 3013 3038 3043 3065 3111 3113 3373 ...
+    3391 3397 3478 3486 3498 3502 3506 3510 3514 3524 3526 3534 3540 3542 3547 3556 3561 3566 3571 3576 3588 3593 ...
+    3602 3623 3624 3628 3632  ...
+    5221 5225 5231 5457 5489 5495 5501 5548 5553 5683 5687 5711 5716 5721 5726 5771 5775 5779 5780 5823 5828 ...
+    6007 6026 6034 6270 6277 6477 6482 6487 6492 6503 6507 6511 6834 6838 6791 6795 6811 6842 6847 ...
+    7000 7003 7033 7037 7041 7081 7087 7349 7848  ...
+    8058 8136 8240 8257 8276 8532 8537 8542 8361 8662 8692 8696 8703 8781 8787 8832 8840 8836 8846 8917 ...
+    9443 9446 ...
+    10097 10102 10723 10728 10742 10747 10752 ...
+    10873 10879 ...
+    10967 ...
+    11093 11174 11180 11207 11308 11541 11576 11578 11663 11671 11678 ...
+    11621 11635 11656 11660 11668 11689 11704 11711];
+
+temporalResults2(ObjectsToClean,:)=nan;
 %%
 
 
@@ -218,12 +240,24 @@ for k=1:maxLabLane
         labelLane2b (labelLane2==caseLab(k))=nan;
     elseif numLab(k)>(1.7*medNumLab)
         % split
-        
+        disp(caseLab(k))
         largeLabel = find(labelLane2==caseLab(k));
-        
-        X2 = [currentLane(b(largeLabel),3),0.1*currentLane(b(largeLabel),1)];
+        X0      = [currentLane(b(largeLabel),3),currentLane(b(largeLabel),1)];
+        q       = fitlm(X0(:,1),X0(:,2));
+        alpha1  = atan(table2array (q.Coefficients(2,1)));
+        X1      = X0 * [cos(alpha1) -sin(alpha1);sin(alpha1) cos(alpha1)];
+        X2      = [X1(:,1) 10*X1(:,2)];
+         X3      = [currentLane(b(largeLabel),3),0.1*currentLane(b(largeLabel),1)];
         Z2 = linkage(X2,'single');
         T2 = cluster(Z2,'MaxClust',round(numLab_stand(k)));
+        Z3 = linkage(X3,'single');
+        T3 = cluster(Z3,'MaxClust',ceil(numLab_stand(k)));
+%         figure(1)
+%         gscatter(X2(:,1),X2(:,2),T2)
+%         axis equal
+%         figure(2)
+%         gscatter(X0(:,1),X0(:,2),T3)       
+%         axis equal
         labelLane2b (largeLabel)=T2+newLabel-1;
         newLabel = newLabel+max(T2);
         %disp(strcat('split',32,num2str(k)))
@@ -272,6 +306,9 @@ selectLane3         = temporalResults2(:,2)==1; tilt=-0.16;
 currentLane         = temporalResults2(selectLane3,:);
 currentLane_tilt    = currentLane(:,3)+tilt*currentLane(:,1);
 [a2,b2]               = sort(currentLane_tilt);
+
+
+
 labelLane3          = 1+ max(labelLane2)+ [0; cumsum(diff(a2)>0.5)];
 labelLane3b         = labelLane3;
 % Clean the labels from 
@@ -285,16 +322,30 @@ numLab_stand        = numLab./medNumLab;
 newLabel=1;
 for k=1:maxLabLane
     if numLab(k)<5
-        disp(k)
+        %disp(k)
         % discard
         labelLane3b (labelLane3==caseLab(k))=nan;
     elseif numLab(k)>(1.7*medNumLab)
         % split
+        disp(caseLab(k))
         largeLabel = find(labelLane3==caseLab(k));
-        
-        X2 = [currentLane(b2(largeLabel),3),0.1*currentLane(b2(largeLabel),1)];
+        X0      = [currentLane(b(largeLabel),3),currentLane(b(largeLabel),1)];
+        q       = fitlm(X0(:,1),X0(:,2));
+        alpha1  = atan(table2array (q.Coefficients(2,1)));
+        X1      = X0 * [cos(alpha1) -sin(alpha1);sin(alpha1) cos(alpha1)];
+        X2      = [X1(:,1) X1(:,2)];
         Z2 = linkage(X2,'single');
         T2 = cluster(Z2,'MaxClust',round(numLab_stand(k)));
+        
+        X3      = [currentLane(b(largeLabel),3),0.1*currentLane(b(largeLabel),1)];
+        Z3 = linkage(X3,'single');
+        T3 = cluster(Z3,'MaxClust',ceil(numLab_stand(k)));
+        figure(1)
+        gscatter(X2(:,1),X2(:,2),T2)
+        axis equal
+        figure(2)
+        gscatter(X0(:,1),X0(:,2),T3)       
+        axis equal        
         labelLane3b (largeLabel)=T2+newLabel-1;
         newLabel = newLabel+max(T2);
 % %         numel_LL =numel(largeLabel);
@@ -318,6 +369,7 @@ for k=1:maxLabLane
 % % %         end
     else
         % none
+        disp(k)
         labelLane3b (labelLane3==caseLab(k))= newLabel;
         newLabel = newLabel+1;
     end  
@@ -326,6 +378,7 @@ end
 
 
 currentLane(b2,7)    = labelLane3b; 
+currentLane(:,7)    = T2; 
 
 %temporalResults2(selectLane3,5)= labelLane3;
 temporalResults2(selectLane3,7)= currentLane(:,7);
@@ -392,7 +445,7 @@ end
 
 
 %% Save movie as mp4
-output_video = VideoWriter('traffic_2021_12_01', 'MPEG-4');
+output_video = VideoWriter('traffic_2022_01_19', 'MPEG-4');
 open(output_video);
 writeVideo(output_video,F);
 close(output_video);
