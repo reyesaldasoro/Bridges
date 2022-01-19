@@ -1,4 +1,4 @@
-figure(12)
+figure(11)
 clf
 
 if ~exist('temporalResults2','var')
