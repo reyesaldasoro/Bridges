@@ -122,6 +122,11 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
 
     if isempty(segmentedObjects_P)
         segmentedObjects(1,1)=1;
+        stringObjects = ' ';
+    else
+         stringObjects = strcat(', Objects (',num2str(size(temporalResults2,1)+1),...
+                                ':',num2str(size(temporalResults2,1)+numel(segmentedObjects_P)),')  [',...
+                                num2str([segmentedObjects_P.Area]),']');
     end
     
     if toDisplay==1
@@ -130,7 +135,7 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
         h33.CData     = (segmentedObjects);
         h2.Title.String=strcat('Time = ',num2str(stepBetweenFrames*k/videoHandle.FrameRate,...
                                '%4.2f'),', Frame =',num2str(k),...
-                               ', Objects (',num2str(size(temporalResults2,1)+1),':',num2str(size(temporalResults2,1)+numel(segmentedObjects_P)),')');
+                               stringObjects);
         drawnow
         F(k2)       = getframe(h0);
     end
@@ -446,7 +451,7 @@ end
 
 
 %% Save movie as mp4
-output_video = VideoWriter('traffic_2022_01_19', 'MPEG-4');
+output_video = VideoWriter('traffic_2022_04_22_B', 'MPEG-4');
 open(output_video);
 writeVideo(output_video,F);
 close(output_video);
