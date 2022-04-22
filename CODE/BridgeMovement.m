@@ -128,15 +128,16 @@ for k = 1:numFrames   %)/videoHandle.FrameRate
         h11.CData     = (allFrames(:,:,:,k)/255);
         h22.CData     = (finalBridge);        
         h33.CData     = (segmentedObjects);
-        h2.Title.String=strcat('Time = ',num2str(stepBetweenFrames*k/videoHandle.FrameRate,'%4.2f'),', Frame =',num2str(k));
+        h2.Title.String=strcat('Time = ',num2str(stepBetweenFrames*k/videoHandle.FrameRate,...
+                               '%4.2f'),', Frame =',num2str(k),...
+                               ', Objects (',num2str(size(temporalResults2,1)+1),':',num2str(size(temporalResults2,1)+numel(segmentedObjects_P)),')');
         drawnow
         F(k2)       = getframe(h0);
     end
     
     
     % only record if there are objects
-    if ~isempty(segmentedObjects_P)
-        
+    if ~isempty(segmentedObjects_P)      
         currentObjects      = [segmentedObjects_P.Area];
         currentCentroids    = [segmentedObjects_P.Centroid];
         currentPosX         = [segmentedObjects_P.positionX];
