@@ -21,7 +21,7 @@ stepBetweenFrames = 100;
 
 
 [allFrames,medImage,stdImage]   = readVideoBridge(videoHandle,stepBetweenFrames);
-numFrames = size(allFrames,4);
+[rows,cols,dims,numFrames] = size(allFrames);
 
    
 
@@ -33,13 +33,22 @@ numFrames = size(allFrames,4);
 detector = yolov4ObjectDetector('csp-darknet53-coco');
 disp(detector)
 %%
- rr=90:180;
- cc=340:500;
- [bboxes,scores,labels] = detect(detector,img(rr,cc,:));
- detectedImg = insertObjectAnnotation(img(rr,cc,:),"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
+% rr=90:180; cc=340:500;
+rr=1:rows;cc=1:cols;
+
+  img = allFrames(rr,cc,:,1)/255;
+ [bboxes,scores,labels] = detect(detector,img,Threshold=0.3);
+ detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes,labels);
+ %detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
  figure
+ imagesc(detectedImg)
+%%
+for k=1:numel(scores)
+ detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes(k,:),labels(k));
+ %detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
+ figure(k+10)
  imshow(detectedImg)
-% 
+end
 % %%
 % [bboxes2,scores2,labels2] = detect(detector,firstFrame.*repmat(uint8(q),[1 1 3]));
 % detectedImg2 = insertObjectAnnotation(firstFrame,"Rectangle",bboxes2,labels2);
