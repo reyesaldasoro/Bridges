@@ -1,5 +1,5 @@
 
-clear 
+clear
 close all
 clc
 %%
@@ -16,8 +16,8 @@ videoHandle                                 = VideoReader(currentVideo);
 % To select all frames     stepBetweenFrames = 1
 % To select one per second stepBetweenFrames = 60
 %%
-stepBetweenFrames = 100; 
-%stepBetweenFrames = 15; 
+stepBetweenFrames = 100;
+%stepBetweenFrames = 15;
 
 
 [allFrames,medImage,stdImage]   = readVideoBridge(videoHandle,stepBetweenFrames);
@@ -28,13 +28,17 @@ stepBetweenFrames = 100;
 mask0 = (mean(stdImage,3));
 mask1 = mask0/max(mask0(:));
 mask2 = graythresh(mask1);
-mask3 = mask1>mask2;
+mask3 = mask1>(0.95*mask2);
 mask4 = imclose(mask3,ones(3,15));
+%mask5 = (imopen(mask3, ones(7,7)));
 mask5 = imfill(imopen(mask4, ones(15,15)),'holes');
+%mask5 = bwlabel(mask4);
+%mask5b = regionprops(mask5,'area');
 mask6 = imdilate(mask5,strel('disk',7));
+%mask6 = ismember(mask5,find([mask5b.Area]>5000));
 mask7 = repmat(mask6,[1 1 3]);
-%imagesc(mask7.*medImage/255)
-
+imagesc(mask7.*medImage/255)
+% imagesc(mask3+mask6)
 
 %% Load the detector
 detector = yolov4ObjectDetector('csp-darknet53-coco');
@@ -70,9 +74,10 @@ cc=1:cols;
 
 for k =1:1:numFrames
     disp(k)
-    img                     = mask7.*allFrames(rr,cc,:,k)/255;
+    %img                     = mask7.*allFrames(rr,cc,:,k)/255;
+    img                     = allFrames(rr,cc,:,k)/255;
     % lower the threshold to avoid losing some weaker detections
-    [bboxes,scores,labels]  = detect(detector,img,Threshold=0.25);
+    [bboxes,scores,labels]  = detect(detector,mask7.*img,Threshold=0.25);
     % remove all objects that are not of interest (umbrellas, boats, etc.)
     keepIndex               = (labels=='car')|(labels=='person')|(labels=='bus')|(labels=='truck')|(labels=='motorbike');
     labels                  = labels(keepIndex);
@@ -87,6 +92,8 @@ for k =1:1:numFrames
         [obj1,obj2]             = ind2sub(size(overlap),find(overlap>0.5));
         for k2 = 1:numel(obj1)
             %process each overlap separately
+            %disp(labels(obj1(k2)))
+            %disp(labels(obj2(k2)))
             if labels(obj1(k2))==labels(obj2(k2))
                 % same object, keep the first
                 keepIndex(obj2(k2))   = 0;
@@ -98,26 +105,45 @@ for k =1:1:numFrames
                 elseif  (labels(obj2(k2))=='person'&labels(obj1(k2))=='motorbike')
                     % keep the motorbike
                     keepIndex(obj2(k2))   = 0;
-                elseif  (labels(obj1(k2))=='car'|labels(obj2(k2))=='car')
-                    % car with something
-                    if  (labels(obj1(k2))=='truck'|labels(obj2(k2))=='truck')
-                        % keep depending on size of the box
-                        if sizeROI(obj1(k2))>3000
-                            % keep the truck
-                            keepIndex(obj2(k2))   = 0;
-                        else
-                            % keep the car
-                            keepIndex(obj1(k2))   = 0;
-                        end
-                    elseif  (labels(obj1(k2))=='motorbike'|labels(obj2(k2))=='motorbike')
-                    if sizeROI(obj1(k2))<300
+                elseif  (labels(obj1(k2))=='car'&labels(obj2(k2))=='truck')
+                    % keep depending on size of the box
+                    if sizeROI(obj1(k2))>3000
+                        % keep the truck
+                        keepIndex(obj2(k2))   = 0;
+                    else
+                        % keep the car
+                        keepIndex(obj1(k2))   = 0;
+                    end
+                elseif  (labels(obj1(k2))=='truck'&labels(obj2(k2))=='car')
+                    if sizeROI(obj1(k2))>3000
                         % keep the truck
                         keepIndex(obj1(k2))   = 0;
                     else
                         % keep the car
                         keepIndex(obj2(k2))   = 0;
                     end
+                elseif  (labels(obj1(k2))=='car'&labels(obj2(k2))=='motorbike')
+                    % keep depending on size of the box
+                    if sizeROI(obj1(k2))<300
+                        % keep the motorbike
+                        keepIndex(obj2(k2))   = 0;
+                    else
+                        % keep the car
+                        keepIndex(obj1(k2))   = 0;
+                    end
+                elseif  (labels(obj1(k2))=='motorbike'&labels(obj2(k2))=='car')
+                    if sizeROI(obj1(k2))<300
+                        % keep the motorbike
+                        keepIndex(obj2(k2))   = 0;
+                    else
+                        % keep the car
+                        keepIndex(obj1(k2))   = 0;
+                    end
                 else
+                    % bus and truck ?
+                     keepIndex(obj2(k2))   = 0;
+                    disp(labels(obj1(k2)))
+                    disp(labels(obj2(k2)))
                     qqq=1;
                 end
             end
@@ -125,7 +151,7 @@ for k =1:1:numFrames
 
     end
     try
-    labels                  = labels(keepIndex);
+        labels                  = labels(keepIndex);
     catch
         qq=1;
     end
@@ -133,6 +159,6 @@ for k =1:1:numFrames
     scores                  = scores(keepIndex);
     detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes,labels);
     imagesc(detectedImg)
-    pause(0.5)
+    pause(0.05)
     %drawnow
 end
