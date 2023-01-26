@@ -21,143 +21,73 @@ stepBetweenFrames = 100;
 
 
 [allFrames,medImage,stdImage]   = readVideoBridge(videoHandle,stepBetweenFrames);
-[rows,cols,dims,numFrames] = size(allFrames);
+[rows,cols,dims,numFrames]      = size(allFrames);
 
 %% Define a mask based on the stdImage
 
-mask0 = (mean(stdImage,3));
-mask1 = mask0/max(mask0(:));
-mask2 = graythresh(mask1);
-mask3 = mask1>(0.95*mask2);
-mask4 = imclose(mask3,ones(3,15));
+mask0                           = (mean(stdImage,3));
+mask1                           = mask0/max(mask0(:));
+mask2                           = graythresh(mask1);
+mask3                           = mask1>(0.95*mask2);
+mask4                           = imclose(mask3,ones(3,15));
 %mask5 = (imopen(mask3, ones(7,7)));
-mask5 = imfill(imopen(mask4, ones(15,15)),'holes');
+mask5                           = imfill(imopen(mask4, ones(15,15)),'holes');
 %mask5 = bwlabel(mask4);
 %mask5b = regionprops(mask5,'area');
-mask6 = imdilate(mask5,strel('disk',7));
+mask6                           = imdilate(mask5,strel('disk',7));
 %mask6 = ismember(mask5,find([mask5b.Area]>5000));
-mask7 = repmat(mask6,[1 1 3]);
+mask7                           = repmat(mask6,[1 1 3]);
 imagesc(mask7.*medImage/255)
 % imagesc(mask3+mask6)
 
 %% Load the detector
-detector = yolov4ObjectDetector('csp-darknet53-coco');
+% csp works well, tiny does not 
+detector                        = yolov4ObjectDetector('csp-darknet53-coco');
 disp(detector)
+% detector2                       = yolov4ObjectDetector('tiny-yolov4-coco');
+% disp(detector2)
+
 %% detect objects in one image
 % rr=90:180; cc=340:500;
 rr=1:rows;cc=1:cols;
 
-img = mask7.*allFrames(rr,cc,:,1)/255;
-[bboxes,scores,labels] = detect(detector,img,Threshold=0.3);
-detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes,labels);
-%detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
+currentFrame = mask7.*allFrames(rr,cc,:,1)/255;
+[bboxes,scores,labels] = detect(detector,currentFrame,Threshold=0.3);
+detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
 figure
 imagesc(detectedImg)
-%% detect the objects in separate images 
-for k=1:numel(scores)
-    detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes(k,:),labels(k));
-    %detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
-    figure(k+10)
-    imshow(detectedImg)
-end
-% %%
-% [bboxes2,scores2,labels2] = detect(detector,firstFrame.*repmat(uint8(q),[1 1 3]));
-% detectedImg2 = insertObjectAnnotation(firstFrame,"Rectangle",bboxes2,labels2);
+% [bboxes2,scores2,labels2] = detect(detector2,img);
+% detectedImg2 = insertObjectAnnotation(img,"Rectangle",bboxes2,labels2);
 % figure
-% imshow(detectedImg2)
-%%
+% imagesc(detectedImg2)
+%% display the segmented objects from the bboxes in separate figures
+% for k=1:numel(scores)
+%     detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes(k,:),labels(k));
+%     %detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
+%     figure(k+10)
+%     imshow(detectedImg)
+% end
+% % %%
+% % [bboxes2,scores2,labels2] = detect(detector,firstFrame.*repmat(uint8(q),[1 1 3]));
+% % detectedImg2 = insertObjectAnnotation(firstFrame,"Rectangle",bboxes2,labels2);
+% % figure
+% % imshow(detectedImg2)
+%% Define the classes of interest and if necessary region of interest
 classesOfInterest = {'car','person','bus','truck','motorbike'};
-rr=90:300;
-cc=1:650;
+% rr=90:300;
+% cc=1:650;
 rr=1:rows;
 cc=1:cols;
 
-for k =1:1:numFrames
+for k =1:10:numFrames
     disp(k)
-    %img                     = mask7.*allFrames(rr,cc,:,k)/255;
-    img                     = allFrames(rr,cc,:,k)/255;
+    currentFrame             = allFrames(rr,cc,:,k)/255;
+    % Pass only the masked image as there is no interest other than the
+    % areas with movement on the bridge.
     % lower the threshold to avoid losing some weaker detections
-    [bboxes,scores,labels]  = detect(detector,mask7.*img,Threshold=0.25);
-    % remove all objects that are not of interest (umbrellas, boats, etc.)
-    keepIndex               = (labels=='car')|(labels=='person')|(labels=='bus')|(labels=='truck')|(labels=='motorbike');
-    labels                  = labels(keepIndex);
-    bboxes                  = bboxes(keepIndex,:);
-    scores                  = scores(keepIndex);
-    keepIndex               = logical(ones(size(scores)));
-    % with a lower threshold, there are cases where two labels are
-    % detected for a single object, merge
-    if size(bboxes,1)>1
-        % there is overlap only if there are 2 or more objects
-        [overlap,sizeROI]       = detectBoxesOverlap(bboxes,rows,cols);
-        [obj1,obj2]             = ind2sub(size(overlap),find(overlap>0.5));
-        for k2 = 1:numel(obj1)
-            %process each overlap separately
-            %disp(labels(obj1(k2)))
-            %disp(labels(obj2(k2)))
-            if labels(obj1(k2))==labels(obj2(k2))
-                % same object, keep the first
-                keepIndex(obj2(k2))   = 0;
-            else
-                % different objects person/motorcycle, car/truck, etc
-                if      (labels(obj1(k2))=='person'&labels(obj2(k2))=='motorbike')
-                    % keep the motorbike
-                    keepIndex(obj1(k2))   = 0;
-                elseif  (labels(obj2(k2))=='person'&labels(obj1(k2))=='motorbike')
-                    % keep the motorbike
-                    keepIndex(obj2(k2))   = 0;
-                elseif  (labels(obj1(k2))=='car'&labels(obj2(k2))=='truck')
-                    % keep depending on size of the box
-                    if sizeROI(obj1(k2))>3000
-                        % keep the truck
-                        keepIndex(obj2(k2))   = 0;
-                    else
-                        % keep the car
-                        keepIndex(obj1(k2))   = 0;
-                    end
-                elseif  (labels(obj1(k2))=='truck'&labels(obj2(k2))=='car')
-                    if sizeROI(obj1(k2))>3000
-                        % keep the truck
-                        keepIndex(obj1(k2))   = 0;
-                    else
-                        % keep the car
-                        keepIndex(obj2(k2))   = 0;
-                    end
-                elseif  (labels(obj1(k2))=='car'&labels(obj2(k2))=='motorbike')
-                    % keep depending on size of the box
-                    if sizeROI(obj1(k2))<300
-                        % keep the motorbike
-                        keepIndex(obj2(k2))   = 0;
-                    else
-                        % keep the car
-                        keepIndex(obj1(k2))   = 0;
-                    end
-                elseif  (labels(obj1(k2))=='motorbike'&labels(obj2(k2))=='car')
-                    if sizeROI(obj1(k2))<300
-                        % keep the motorbike
-                        keepIndex(obj2(k2))   = 0;
-                    else
-                        % keep the car
-                        keepIndex(obj1(k2))   = 0;
-                    end
-                else
-                    % bus and truck ?
-                     keepIndex(obj2(k2))   = 0;
-                    disp(labels(obj1(k2)))
-                    disp(labels(obj2(k2)))
-                    qqq=1;
-                end
-            end
-        end
-
-    end
-    try
-        labels                  = labels(keepIndex);
-    catch
-        qq=1;
-    end
-    bboxes                  = bboxes(keepIndex,:);
-    scores                  = scores(keepIndex);
-    detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes,labels);
+    [bboxes,scores,labels]  = detect(detector,mask7.*currentFrame,Threshold=0.25);
+    [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+    detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
     imagesc(detectedImg)
     pause(0.05)
     %drawnow
