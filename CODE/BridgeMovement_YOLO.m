@@ -24,7 +24,8 @@ stepBetweenFrames = 100;
 [rows,cols,dims,numFrames]      = size(allFrames);
 
 %% Define a mask based on the stdImage
-
+% Mask7 defines the area of interest, only over the bridge where there is
+% movement, river and all else is discarded
 mask0                           = (mean(stdImage,3));
 mask1                           = mask0/max(mask0(:));
 mask2                           = graythresh(mask1);
@@ -38,6 +39,10 @@ mask6                           = imdilate(mask5,strel('disk',7));
 %mask6 = ismember(mask5,find([mask5b.Area]>5000));
 mask7                           = repmat(mask6,[1 1 3]);
 imagesc(mask7.*medImage/255)
+
+% Mask8 is the watershed between one side of the bridge and the other
+mask8                           = watershed(bwdist(1-mask6));
+
 % imagesc(mask3+mask6)
 
 %% Load the detector
@@ -73,7 +78,7 @@ imagesc(detectedImg)
 % % figure
 % % imshow(detectedImg2)
 %% Define the classes of interest and if necessary region of interest
-classesOfInterest = {'car','person','bus','truck','motorbike'};
+% classesOfInterest = {'car','person','bus','truck','motorbike'};
 % rr=90:300;
 % cc=1:650;
 rr=1:rows;
@@ -89,6 +94,7 @@ for k =1:10:numFrames
     [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
     detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
     imagesc(detectedImg)
+    input('')
     pause(0.05)
     %drawnow
 end
