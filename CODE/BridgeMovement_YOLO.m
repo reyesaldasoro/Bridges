@@ -43,7 +43,7 @@ imagesc(mask7.*medImage/255)
 %% Load the detector
 detector = yolov4ObjectDetector('csp-darknet53-coco');
 disp(detector)
-%%
+%% detect objects in one image
 % rr=90:180; cc=340:500;
 rr=1:rows;cc=1:cols;
 
@@ -53,7 +53,7 @@ detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes,labels);
 %detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
 figure
 imagesc(detectedImg)
-%%
+%% detect the objects in separate images 
 for k=1:numel(scores)
     detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes(k,:),labels(k));
     %detectedImg = insertObjectAnnotation(img,"Rectangle",bboxes([14 22 23 24],:),labels([14 2 23 24]));
