@@ -84,6 +84,7 @@ imagesc(detectedImg)
 rr=1:rows;
 cc=1:cols;
 temporalResults5=[];
+medImagesum                 = mask6.* (sum(medImage/255,3));
 for k =1:1:numFrames
     disp(k)
     currentFrame             = allFrames(rr,cc,:,k)/255;
@@ -94,13 +95,14 @@ for k =1:1:numFrames
     [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
 
     % Use current Difference to detect objects that are missed by Yolo
-    currentDifference       = (abs(sum(currentFrame,3)- (sum(medImage/255,3))));
+
 
     if ~isempty(labels)
-        [temporalResults4,labels2]       = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
-        temporalResults5  =[temporalResults5;temporalResults4];
+        [temporalResults4,labels2]      = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
+        temporalResults5                = [temporalResults5;temporalResults4];
+        currentMissedInFrame            = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7);
         %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
-        detectedImg = insertObjectAnnotation(currentDifference,"rectangle",bboxes,labels2,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
+        detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels2,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
         imagesc(detectedImg)
     else
         imagesc(currentDifference)
