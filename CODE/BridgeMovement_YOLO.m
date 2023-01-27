@@ -92,16 +92,20 @@ for k =1:1:numFrames
     % lower the threshold to avoid losing some weaker detections
     [bboxes,scores,labels]  = detect(detector,mask7.*currentFrame,Threshold=0.25);
     [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+
+    % Use current Difference to detect objects that are missed by Yolo
+    currentDifference       = (abs(sum(currentFrame,3)- (sum(medImage/255,3))));
+
     if ~isempty(labels)
         [temporalResults4,labels2]       = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
         temporalResults5  =[temporalResults5;temporalResults4];
         %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
-        detectedImg = insertObjectAnnotation(currentFrame,"rectangle",bboxes,labels2,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
+        detectedImg = insertObjectAnnotation(currentDifference,"rectangle",bboxes,labels2,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
         imagesc(detectedImg)
     else
-        imagesc(currentFrame)
+        imagesc(currentDifference)
     end
     %input('')
-    pause(0.05)
+    pause(0.001)
     %drawnow
 end
