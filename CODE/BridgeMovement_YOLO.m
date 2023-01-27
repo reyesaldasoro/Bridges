@@ -83,7 +83,7 @@ imagesc(detectedImg)
 % cc=1:650;
 rr=1:rows;
 cc=1:cols;
-
+temporalResults5=[];
 for k =1:10:numFrames
     disp(k)
     currentFrame             = allFrames(rr,cc,:,k)/255;
@@ -92,6 +92,9 @@ for k =1:10:numFrames
     % lower the threshold to avoid losing some weaker detections
     [bboxes,scores,labels]  = detect(detector,mask7.*currentFrame,Threshold=0.25);
     [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+
+    [temporalResults4]       = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
+    temporalResults5  =[temporalResults5;temporalResults4];
     detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
     imagesc(detectedImg)
     input('')
