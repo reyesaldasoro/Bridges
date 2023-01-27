@@ -1,4 +1,4 @@
-function [temporalResults]  = recordObjectsBridge(bboxes,labels,currentTime,currentFrame)
+function [temporalResults,labels2]  = recordObjectsBridge(bboxes,labels,currentTime,currentFrame)
 
 % Store one row per object, in columns
 % 1  position with respect to bridge, callibrated in metres
@@ -107,6 +107,13 @@ for counterBox          = 1:numCurrentObjects
     [~,maxG]             = max(yG);
     [~,maxB]             = max(yB);
     currentRGB(counterBox,1:3)          =round( 255*[ maxR maxG maxB]/100);
+
+
+    % extend the labels
+    currLabel            = char(labels(counterBox));
+    %labels2{counterBox,1}   = char(strcat(string(labels(counterBox)),', x=',num2str(round(avPosX(counterBox))),", RGB=",num2str(currentRGB(counterBox,1:3))));
+    labels2{counterBox,1}   = char(strcat(currLabel(1),', x=',num2str(round(avPosX(counterBox))),", RGB=",num2str(currentRGB(counterBox,1:3))));
+    labels2{counterBox,1}   = char(strcat(currLabel(1),', x=',num2str(round(avPosX(counterBox)))));
 %    currentRGB(counterBox,1:3)          = 255*squeeze(mode(mode(currentObject)))';
 %     figure(10+counterBox)
 %     subplot(321)
@@ -117,6 +124,7 @@ for counterBox          = 1:numCurrentObjects
 %     bar(xB,yB)
 %     subplot(122)
 %     imagesc(currentObject)
+% ex
 end
 
 %%
