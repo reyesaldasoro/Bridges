@@ -84,7 +84,7 @@ imagesc(detectedImg)
 rr=1:rows;
 cc=1:cols;
 temporalResults5=[];
-for k =1:10:numFrames
+for k =1:1:numFrames
     disp(k)
     currentFrame             = allFrames(rr,cc,:,k)/255;
     % Pass only the masked image as there is no interest other than the
@@ -92,12 +92,16 @@ for k =1:10:numFrames
     % lower the threshold to avoid losing some weaker detections
     [bboxes,scores,labels]  = detect(detector,mask7.*currentFrame,Threshold=0.25);
     [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
-
-    [temporalResults4]       = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
-    temporalResults5  =[temporalResults5;temporalResults4];
-    detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
-    imagesc(detectedImg)
-    input('')
+    if ~isempty(labels)
+        [temporalResults4,labels2]       = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
+        temporalResults5  =[temporalResults5;temporalResults4];
+        %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
+        detectedImg = insertObjectAnnotation(currentFrame,"rectangle",bboxes,labels2,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
+        imagesc(detectedImg)
+    else
+        imagesc(currentFrame)
+    end
+    %input('')
     pause(0.05)
     %drawnow
 end
