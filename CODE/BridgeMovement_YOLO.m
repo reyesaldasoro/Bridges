@@ -22,6 +22,33 @@ stepBetweenFrames = 100;
 
 [allFrames,medImage,stdImage]   = readVideoBridge(videoHandle,stepBetweenFrames);
 [rows,cols,dims,numFrames]      = size(allFrames);
+%% First illustration a representative frame
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(allFrames(rr,cc,:,12)/255)
+h1=gca;
+h1.Position = [0 0 1 1];
+filename = 'Figures\Fig_0_representativeFrameB.png';
+print('-dpng','-r400',filename)
+%% Illustrate median 
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(medImage/255)
+h1=gca;
+h1.Position = [0 0 1 1];
+filename = 'Figures\Fig_0_medianImage.png';
+print('-dpng','-r400',filename)
+%% Illustrate standard deviation
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(stdImage/25)
+h1=gca;
+h1.Position = [0 0 1 1];
+filename = 'Figures\Fig_0_stdImage.png';
+print('-dpng','-r400',filename)
+
+
+
 
 %% Define a mask based on the stdImage
 % Mask7 defines the area of interest, only over the bridge where there is
@@ -44,6 +71,19 @@ imagesc(mask7.*medImage/255)
 mask8                           = watershed(bwdist(1-mask6));
 
 % imagesc(mask3+mask6)
+%% illustrate mask
+
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(0.5*(1-mask7)+allFrames(rr,cc,:,12)/255)
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
+filename = 'Figures\Fig_1_maskActivityB.png';
+print('-dpng','-r400',filename)
+
+
+
 
 %% Load the detector
 % csp works well, tiny does not 
@@ -52,15 +92,113 @@ disp(detector)
 % detector2                       = yolov4ObjectDetector('tiny-yolov4-coco');
 % disp(detector2)
 
-%% detect objects in one image
+%% detect objects in one image without mask high threshold
+
+currentFrame = allFrames(rr,cc,:,12)/255;
+[bboxes,scores,labels] = detect(detector,currentFrame,Threshold=0.7);
+detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(detectedImg)
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
+filename = 'Figures\Fig_2_yoloDetection_highThresB.png';
+print('-dpng','-r400',filename)
+%% detect objects in one image without mask high threshold
+
+currentFrame = allFrames(rr,cc,:,12)/255;
+[bboxes,scores,labels] = detect(detector,currentFrame,Threshold=0.1);
+detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(detectedImg)
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
+filename = 'Figures\Fig_2_yoloDetection_lowThresB.png';
+print('-dpng','-r400',filename)
+
+%% detect objects in one image with mask
 % rr=90:180; cc=340:500;
 rr=1:rows;cc=1:cols;
 
-currentFrame = mask7.*allFrames(rr,cc,:,1)/255;
-[bboxes,scores,labels] = detect(detector,currentFrame,Threshold=0.3);
+currentFrame = allFrames(rr,cc,:,12)/255;
+[bboxes,scores,labels] = detect(detector,mask7.*currentFrame,Threshold=0.2);
 detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
-figure
+
+h0 = figure;
+h0.Position = [460  300  836  469];
 imagesc(detectedImg)
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
+filename = 'Figures\Fig_3_yoloDetection_lowThresB_mask.png';
+print('-dpng','-r400',filename)
+%% detect objects in one image with mask and clean
+% rr=90:180; cc=340:500;
+rr=1:rows;cc=1:cols;
+
+currentFrame = allFrames(rr,cc,:,12)/255;
+[bboxes,scores,labels] = detect(detector,mask7.*currentFrame,Threshold=0.2);
+[bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
+
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(detectedImg)
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
+filename = 'Figures\Fig_4_yoloDetection_lowThresB_mask_clean.png';
+print('-dpng','-r400',filename)
+
+
+
+%% detect objects in one image with mask and clean
+% rr=90:180; cc=340:500;
+rr=1:rows;cc=1:cols;
+
+currentFrame                = allFrames(rr,cc,:,12)/255;
+[bboxes,scores,labels]      = detect(detector,mask7.*currentFrame,Threshold=0.2);
+[bboxes,scores,labels]      = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+[avPosX,avPosY]             = callibrateObjectsBridge(bboxes);
+[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
+
+
+detectedImg                 = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels3);
+
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(detectedImg)
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
+filename = 'Figures\Fig_5_yoloDetection_lowThresB_mask_clean_dist.png';
+print('-dpng','-r400',filename)
+
+
+
+%%
+[bboxes,scores,labels]      = detect(detector,testImage2,Threshold=0.2);
+[bboxes,scores,labels]      = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+[avPosX,avPosY]             = callibrateObjectsBridge(bboxes);
+[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
+
+
+detectedImg                 = insertObjectAnnotation(testImage2,"Rectangle",bboxes,labels3);
+
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(detectedImg)
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
+filename = 'Figures\Fig_6_yoloDetection_callibration.png';
+print('-dpng','-r400',filename)
+
+     
+
 % [bboxes2,scores2,labels2] = detect(detector2,img);
 % detectedImg2 = insertObjectAnnotation(img,"Rectangle",bboxes2,labels2);
 % figure
