@@ -15,7 +15,7 @@ keepIndex               = logical(ones(size(scores)));
 if size(bboxes,1)>1
     % there is overlap only if there are 2 or more objects
     [overlap,sizeROI]       = detectBoxesOverlap(bboxes,rows,cols);
-    [obj1,obj2]             = ind2sub(size(overlap),find(overlap>0.5));
+    [obj1,obj2]             = ind2sub(size(overlap),find(overlap>0.4));
     for k2 = 1:numel(obj1)
         %process each overlap separately
         %disp(labels(obj1(k2)))
