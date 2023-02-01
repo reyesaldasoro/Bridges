@@ -155,15 +155,15 @@ print('-dpng','-r400',filename)
 
 
 
-%% detect objects in one image with mask and clean
-% rr=90:180; cc=340:500;
-rr=1:rows;cc=1:cols;
+%% detect missed objects in one image 
 
 currentFrame                = allFrames(rr,cc,:,12)/255;
-[bboxes,scores,labels]      = detect(detector,mask7.*currentFrame,Threshold=0.2);
+[bboxes,scores,labels]      = detect(detector,mask7.*currentFrame,Threshold=0.6);
 [bboxes,scores,labels]      = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
 [avPosX,avPosY]             = callibrateObjectsBridge(bboxes);
-[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
+
+[MissedInFrame,avPosX]      = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7);
+%[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
 
 
 detectedImg                 = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels3);
@@ -174,15 +174,33 @@ imagesc(detectedImg)
 h1=gca;
 h1.Position = [0 0 1 1];
  axis off
+filename = 'Figures\Fig_7_yoloMissedDetection_1.png';
+print('-dpng','-r400',filename)
+
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(MissedInFrame)
+h1=gca;
+h1.Position = [0 0 1 1];
+
+ axis off
+filename = 'Figures\Fig_7_yoloMissedDetection_2.png';
+print('-dpng','-r400',filename)
+
+
+%%
+h1=gca;
+h1.Position = [0 0 1 1];
+ axis off
 filename = 'Figures\Fig_5_yoloDetection_lowThresB_mask_clean_dist.png';
 print('-dpng','-r400',filename)
 
 
 
-%%
+%% illustrate callibration with a test image
 [bboxes,scores,labels]      = detect(detector,testImage2,Threshold=0.2);
 [bboxes,scores,labels]      = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
-[avPosX,avPosY]             = callibrateObjectsBridge(bboxes);
+[avPosX,avPosY,labels3]             = callibrateObjectsBridge(bboxes,labels);
 [temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
 
 
@@ -223,6 +241,15 @@ rr=1:rows;
 cc=1:cols;
 temporalResults5=[];
 medImagesum                 = mask6.* (sum(medImage/255,3));
+h0 = figure;
+h0.Position = [460  300  836  469];
+imagesc(medImagesum)
+axis off
+h1=gca;
+h1.Position = [0 0 1 1];
+clear F 
+
+
 for k =1:1:numFrames
     disp(k)
     currentFrame             = allFrames(rr,cc,:,k)/255;
@@ -232,20 +259,42 @@ for k =1:1:numFrames
     [bboxes,scores,labels]  = detect(detector,mask7.*currentFrame,Threshold=0.25);
     [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
 
+
+    %[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
+
+
     % Use current Difference to detect objects that are missed by Yolo
 
 
     if ~isempty(labels)
-        [temporalResults4,labels2]      = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
-        temporalResults5                = [temporalResults5;temporalResults4];
+        %[avPosX,avPosY]             = callibrateObjectsBridge(bboxes);        
+        [avPosX,avPosY,labels3]             = callibrateObjectsBridge(bboxes,labels);
+        [currentMissedInFrame,avPosX2]     = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7);
+
+        %[temporalResults4,labels2]      = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame);
+        %temporalResults5                = [temporalResults5;temporalResults4];
         currentMissedInFrame            = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7);
         %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
-        detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels2,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
-        imagesc(detectedImg)
+        %detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
+        detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
+        %imagesc(detectedImg)
+        h1.Children.CData = detectedImg;
     else
-        imagesc(currentDifference)
+        %imagesc(currentFrame)
+        h1.Children.CData = currentFrame;
     end
     %input('')
-    pause(0.001)
-    %drawnow
+    %pause(0.001)
+    drawnow
+    F(k)       = getframe(h0);
 end
+
+%%
+
+
+%% Save movie as mp4
+output_video = VideoWriter('traffic_2023_02_01_Yolo', 'MPEG-4');
+open(output_video);
+writeVideo(output_video,F);
+close(output_video);
+
