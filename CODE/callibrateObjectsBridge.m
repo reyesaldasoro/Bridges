@@ -1,4 +1,4 @@
-function [avPosX,avPosY]  = callibrateObjectsBridge(bboxes)
+function [avPosX,avPosY,labels3]  = callibrateObjectsBridge(bboxes,labels)
 
 % Callibrate positions in pixels to metres along the bridge.
 
@@ -54,3 +54,15 @@ avPosY =    rotatedRows*12/65;
 
 % Areas have to be callibrated as well
 % currentBoxArea =    currentAreas.*((avPosX+50).^1)/100;
+if exist('labels','var')
+    numCurrentObjects       = numel(labels);
+    for counterBox          = 1:numCurrentObjects
+        currLabel            = char(labels(counterBox));
+        if (avPosX(counterBox)>-5)&(avPosX(counterBox)<55)
+            labels3{counterBox,1}   = char(strcat(currLabel(1),', x=',num2str(round(avPosX(counterBox)))));
+            labels3{counterBox,1}   = char(strcat( currLabel(1),', (',num2str(round(avPosX(counterBox))),',',num2str(round(avPosY(counterBox))),')'      ));
+        else
+            labels3{counterBox,1}   = '';
+        end
+    end
+end
