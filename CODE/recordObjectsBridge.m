@@ -1,14 +1,16 @@
-function [temporalResults,temporalResults2,trafficLightConditions]  = recordObjectsBridge(bboxes,labels,currentTime,currentFrame,avPosX,avPosY)
+function [temporalResults,temporalResults2,trafficLightConditions]  = recordObjectsBridge(bboxes,labels,currentTime,k,currentFrame,avPosX,avPosY)
 
 % Store one row per object, in columns
-% 1  position with respect to bridge, callibrated in metres
-% 2  Lane, 1 going towards the right, 2 going towards the left
-% 3  time, callibrated in seconds
-% 4  weight (OBSOLETE as there are labels) 
-% 5  PREVIOUSLY Bounding box area, callibrated, but not really perfect, better to use
+% 1  X position with respect to bridge, callibrated in metres
+% 2  Y  position,  Negative upper lane, positive, lower lane 
+% 3  Lane, 1 going towards the right, 2 going towards the left
+% 4  Time Frame  (previously weight OBSOLETE as there are labels) 
+% 5  time, callibrated in seconds
+% 6  label (PREVIOUSLY Bounding box area)
 %    labels person =1, motorcycle =2, car =3, truck = 4, bus = 5;
-% 6-8  RGB colour, 
-
+% 7-9  RGB colour, 
+% 10 unique tag in Frame
+% 11 will be for unique tag overtime
 
 % number of current Objects
 numCurrentObjects       = size(bboxes,1);
@@ -36,7 +38,7 @@ currentLane             = 1.5+sign(-avPosY)/2;
 
 
 %% these are the results as returned by the detector
-temporalResults             = [round(avPosX) round(avPosY) currentLane repmat(currentTime,[numCurrentObjects 1]) labels currentRGB];
+temporalResults             = [round(avPosX) round(avPosY) currentLane repmat([k   currentTime],[numCurrentObjects 1]) labels currentRGB];
 
 
 %% Remove the traffic light confused as a person
@@ -55,7 +57,18 @@ carsMovingLeft              = temporalResults1(currentLane(labels>0)==2,:);
 [~,orderLeft]               = sort(carsMovingLeft(:,1),'descend');
 
 
-temporalResults2            = [carsMovingRight(orderRight,:);carsMovingLeft(orderLeft,:)];
+carsMovingRight             = carsMovingRight(orderRight,:) ;
+carsMovingLeft              = carsMovingLeft(orderLeft,:) ;
+% add a tag for current car in lane not for pedestrians or motorcycles!
+notPedestriansLeft          = carsMovingLeft(:,6)>2;
+notPedestriansRight         = carsMovingRight(:,6)>2;
+
+tagLeft                     = notPedestriansLeft.*(cumsum(notPedestriansLeft));
+tagRight                    = notPedestriansRight.*(cumsum(notPedestriansRight));
+
+%carsMovingRight             = [carsMovingRight(orderRight,:) tagRight(orderRight,:)];
+%carsMovingLeft              = [carsMovingLeft(orderLeft,:)  -tagLeft(orderLeft,:)];
+temporalResults2            = [[carsMovingRight tagRight];[carsMovingLeft -tagLeft]];
 
 
 %temporalResults        = [round(avPosX) (currentLane) repmat(currentTime,[numCurrentObjects 1]) currentWeights currentBoxArea currentRGB ];
