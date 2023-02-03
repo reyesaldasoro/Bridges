@@ -12,8 +12,8 @@ videoHandle                                 = VideoReader(currentVideo);
 % To select all frames     stepBetweenFrames = 1
 % To select one per second stepBetweenFrames = 60
 
-stepBetweenFrames = 100;
-%stepBetweenFrames = 15;
+%stepBetweenFrames = 100;
+stepBetweenFrames = 15;
 
 
 [allFrames,medImage,stdImage]   = readVideoBridge(videoHandle,stepBetweenFrames);
@@ -69,7 +69,7 @@ clear F
 %%
 temporalResults5=[];
 %
-for k =22%:1:numFrames
+for k =1:210%:1:numFrames
     disp(k)
     currentFrame                = allFrames(:,:,:,k)/255;
     currentTime                 = stepBetweenFrames*k/videoHandle.FrameRate;
@@ -89,9 +89,10 @@ for k =22%:1:numFrames
     if ~isempty(labels)     
         [avPosX,avPosY,labels2,labels3]         = callibrateObjectsBridge(bboxes,labels);
         [currentMissedInFrame,avPosX2,avPosY2]  = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7);
-        [temporalResults0,temporalResults1,trafficLightConditions]     = recordObjectsBridge(bboxes,labels2,currentTime,currentFrame,avPosX,avPosY);
+        [temporalResults0,temporalResults1,trafficLightConditions]     = recordObjectsBridge(bboxes,labels2,currentTime,k,currentFrame,avPosX,avPosY);
 
-        temporalResults5                        = [temporalResults5;temporalResults1];
+        temporalResults5                        = trackObjectsBridge(temporalResults5,temporalResults1);
+        %temporalResults5                        = [temporalResults5;temporalResults1];
         % remove the traffic light detected as a pedestrian
         bboxes(trafficLightConditions,:)  =[];
         labels3(trafficLightConditions,:)  =[];
@@ -117,7 +118,7 @@ end
 
 
 %% Save movie as mp4
-output_video = VideoWriter('traffic_2023_02_01_Yolo', 'MPEG-4');
+output_video = VideoWriter('traffic_2023_02_01_Yolo_10', 'MPEG-4');
 open(output_video);
 writeVideo(output_video,F);
 close(output_video);
