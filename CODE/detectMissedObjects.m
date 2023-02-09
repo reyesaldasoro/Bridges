@@ -3,8 +3,8 @@ function  [MissedInFrame,avPosX,avPosY]      = detectMissedObjects(currentFrame,
 %%
 [rows,cols,~]           = size(currentFrame);
 currFrameSum            = mask7(:,:,1).*sum(currentFrame,3);
-currentMissedInFrame0    = abs(currFrameSum- medImagesum);
-currentMissedInFrame0b      = currentMissedInFrame0;
+currentMissedInFrame0   = abs(currFrameSum- medImagesum);
+currentMissedInFrame0b  = currentMissedInFrame0;
 %remove areas covered by bboxes
 numCurrentObjects       = size(bboxes,1);
 
