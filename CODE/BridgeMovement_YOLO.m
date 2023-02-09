@@ -117,8 +117,9 @@ end
 %%
 
 
-%% Save movie as mp4
-output_video = VideoWriter('traffic_2023_02_01_Yolo_10', 'MPEG-4');
+%% Save movie as AVI
+% Saving as mp4 loses some frames
+output_video = VideoWriter('traffic_2023_02_01_Yolo_10B');
 open(output_video);
 writeVideo(output_video,F);
 close(output_video);
