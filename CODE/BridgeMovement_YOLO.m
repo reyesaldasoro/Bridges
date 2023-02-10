@@ -69,53 +69,60 @@ clear F
 %%
 temporalResults5=[];
 %
-for k =1:210%:1:numFrames
-    disp(k)
-    currentFrame                            = allFrames(:,:,:,k)/255;
-    currentTime                             = stepBetweenFrames*k/videoHandle.FrameRate;
-    % Pass only the masked image as there is no interest other than the
-    % areas with movement on the bridge.
-    % lower the threshold to avoid losing some weaker detections
-    [bboxes,scores,labels]                  = detect(detector,mask7.*currentFrame,Threshold=0.25);
-    [bboxes2,scores2,labels2,numObjectsRemoved]  = objectsOfInterest(bboxes,scores,labels);
-    [bboxes3,scores3,labels3,numObjectsRemoved2    ]  = cleanOverlappingObjects(bboxes,scores,labels,rows,cols);
-    [bboxes,scores,labels]                  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+for kThres = 0.5%:0.05:1
+    for k =1%:50%:1:numFrames
+        disp(k)
+        currentFrame                                        = allFrames(:,:,:,k)/255;
+        currentTime                                         = stepBetweenFrames*k/videoHandle.FrameRate;
+        % Pure YOLO, no exclusions
+        % lower the threshold to avoid losing some weaker detections, increase
+        % threshold to improve accuracy
+        [bboxes0,scores0,labels0]                           = detect(detector,currentFrame,Threshold=kThres);
+        numObjDetected(k,1)                             = numel(labels0);
+        % Pass only the masked image as there is no interest other than the
+        % areas with movement on the bridge.
+
+        [bboxes1,scores1,labels1]                           = detect(detector,mask7.*currentFrame,Threshold=kThres);
+        numObjDetectedMask(k,1)                         = numel(labels1);
+        [bboxes2,scores2,labels2,numObjRemoved(k,1)]    = objectsOfInterest(bboxes1,scores1,labels1);
+        [bboxes3,scores3,labels3,numObjRemoved(k,2)]    = cleanOverlappingObjects(bboxes2,scores2,labels2,rows,cols);
+        [bboxes4,scores4,labels4,numObjRemoved(k,3)]    = cleanObjectsBridge(bboxes3,scores3,labels3);
+        [currMissedInFrame,avPosX2,avPosY2,numObjMissed(k,1)]  = detectMissedObjects(currentFrame,medImagesum,bboxes0,mask7);
+
+        %[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
 
 
-    %[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
+        % Use current Difference to detect objects that are missed by Yolo
 
 
-    % Use current Difference to detect objects that are missed by Yolo
+        if ~isempty(labels)
+            %[avPosX,avPosY,labels5,labels6]         = callibrateObjectsBridge(bboxes,labels);
 
+            %[temporalResults0,temporalResults1]     = recordObjectsBridge(bboxes4,labels5,currentTime,k,currentFrame,avPosX,avPosY);
 
-    if ~isempty(labels)     
-        [avPosX,avPosY,labels2,labels3]         = callibrateObjectsBridge(bboxes,labels);
-        [currentMissedInFrame,avPosX2,avPosY2]  = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7);
-        [temporalResults0,temporalResults1,trafficLightConditions]     = recordObjectsBridge(bboxes,labels2,currentTime,k,currentFrame,avPosX,avPosY);
+            %temporalResults5                        = trackObjectsBridge(temporalResults5,temporalResults1);
+            %temporalResults5                        = [temporalResults5;temporalResults1];
+            %         % remove the traffic light detected as a pedestrian
+            %         bboxes(trafficLightConditions,:)  =[];
+            %         labels3(trafficLightConditions,:)  =[];
 
-        temporalResults5                        = trackObjectsBridge(temporalResults5,temporalResults1);
-        %temporalResults5                        = [temporalResults5;temporalResults1];
-        % remove the traffic light detected as a pedestrian
-        bboxes(trafficLightConditions,:)  =[];
-        labels3(trafficLightConditions,:)  =[];
-        
-        %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
-        %detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
-        detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
-        %imagesc(detectedImg)
-        hImage.CData = detectedImg;
-    else
-        %imagesc(currentFrame)
-        hImage.CData = currentFrame;
+            %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
+            %detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
+            detectedImg = insertObjectAnnotation(currMissedInFrame,"rectangle",bboxes0,labels0,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
+            %imagesc(detectedImg)
+            hImage.CData = detectedImg;
+        else
+            %imagesc(currentFrame)
+            hImage.CData = currentFrame;
+        end
+        %input('')
+        pause(0.1)
+        hTime.String    = strcat('Time:',32,32,32,num2str(currentTime));
+        hFrames.String  = strcat('Frame:',32,num2str(k));
+        drawnow
+        %F(k)       = getframe(h0);
     end
-    %input('')
-    %pause(0.001)
-    hTime.String    = strcat('Time:',32,32,32,num2str(currentTime));
-    hFrames.String  = strcat('Frame:',32,num2str(k));
-    drawnow
-    F(k)       = getframe(h0);
 end
-
 %%
 
 
