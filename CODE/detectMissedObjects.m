@@ -1,4 +1,4 @@
-function  [MissedInFrame,avPosX,avPosY]      = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7)
+function  [MissedInFrame,avPosX,avPosY,numMissed]      = detectMissedObjects(currentFrame,medImagesum,bboxes,mask7)
 
 %%
 [rows,cols,~]           = size(currentFrame);
@@ -41,7 +41,7 @@ if numL==0
     MissedInFrame                      = currentFrame;
     avPosX                              =[];
     avPosY                              =[];
-
+    numMissed                           = 0;
 else
     for k=1:numL
         bboxes3(k,:)                  = currentMissedInFrame2P(k,:).BoundingBox;
@@ -53,10 +53,10 @@ else
     end
     % only keep objects with more than 10 pixels AND between -5 and 55 in x
     regionsToKeep1          = find([currentMissedInFrame2P.Area]>10 );
-    regionsToKeep2          = find((avPosX3>3)&(avPosX3<46));
+    regionsToKeep2          = find((avPosX3>-1)&(avPosX3<46));
     regionsToKeep           = intersect(regionsToKeep1,regionsToKeep2);
-    currentMissedInFrame3  = ismember(currentMissedInFrame2L,regionsToKeep);
-
+    currentMissedInFrame3   = ismember(currentMissedInFrame2L,regionsToKeep);
+    [~,numMissed]           = bwlabel(currentMissedInFrame3);
     avPosX                  = avPosX3(regionsToKeep);
     avPosY                  = avPosY3(regionsToKeep);
 
