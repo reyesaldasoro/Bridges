@@ -16,3 +16,8 @@ mask6                           = imdilate(mask5,strel('disk',7));
 %mask6 = ismember(mask5,find([mask5b.Area]>5000));
 mask7                           = repmat(mask6,[1 1 3]);
 
+% Mask8 is the watershed between one side of the bridge and the other
+%mask8                           = watershed(bwdist(1-mask6));
+
+% imagesc(mask3+mask6)
+
