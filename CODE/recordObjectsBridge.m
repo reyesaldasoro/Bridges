@@ -41,11 +41,11 @@ currentLane             = 1.5+sign(-avPosY)/2;
 temporalResults             = [round(avPosX) round(avPosY) currentLane repmat([k   currentTime],[numCurrentObjects 1]) labels currentRGB];
 
 
-%% Remove the traffic light confused as a person
-trafficLightConditions =    ((temporalResults(:,5)==1)|(temporalResults(:,5)==-1)  ) &...
-                            ((temporalResults(:,1)==2)|(temporalResults(:,1)==1)) &...
-                            ((temporalResults(:,2)==-2)|(temporalResults(:,2)==1));
-labels(trafficLightConditions)=0;
+% %% Remove the traffic light confused as a person
+% trafficLightConditions =    ((temporalResults(:,5)==1)|(temporalResults(:,5)==-1)  ) &...
+%                             ((temporalResults(:,1)==2)|(temporalResults(:,1)==1)) &...
+%                             ((temporalResults(:,2)==-2)|(temporalResults(:,2)==1));
+% labels(trafficLightConditions)=0;
 %% Discard objects not in bridge, and order by lane and position
 temporalResults1            = temporalResults;
 temporalResults1            = temporalResults1(labels>0,:);
