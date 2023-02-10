@@ -1,4 +1,4 @@
-function [mask7] = defineMaskBridge(stdImage)
+function [mask7,medImagesum] = defineMaskBridge(stdImage,medImage)
 
 %% Define a mask based on the stdImage
 % Mask7 defines the area of interest, only over the bridge where there is
@@ -21,3 +21,4 @@ mask7                           = repmat(mask6,[1 1 3]);
 
 % imagesc(mask3+mask6)
 
+medImagesum                 = mask6.* (sum(medImage/255,3));
