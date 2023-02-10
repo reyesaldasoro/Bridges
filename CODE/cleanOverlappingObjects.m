@@ -1,7 +1,7 @@
 function [bboxes,scores,labels,numObjectsRemoved    ]  = cleanOverlappingObjects(bboxes,scores,labels,rows,cols)
 % This function 
 %  1  detects overlapping boxes and keeps only one, checking the label
-%  2  removes mistaken traffic sign for person 
+
 
 % with a lower threshold, there are cases where two labels are
 % detected for a single object, merge
@@ -74,5 +74,5 @@ end
 
 bboxes                  = bboxes(keepIndex,:);
 scores                  = scores(keepIndex);
-
+labels                  = labels(keepIndex);
 numObjectsRemoved       = numObjectsReceived - numel(labels);
