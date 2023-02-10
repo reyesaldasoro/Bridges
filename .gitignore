@@ -7618,3 +7618,6 @@ CODE/Figures/testImageBridge3.png
 CODE/Figures/testImageCallibrarion.pptx
 CODE/detectMissedObjects.asv
 CODE/recordObjectsBridge.asv
+CODE/objectsOfInterest.asv
+CODE/BridgeMovement_YOLO.asv
+CODE/trackObjectsBridge.asv
