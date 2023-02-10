@@ -10,9 +10,9 @@ numObjectsReceived      = numel(labels);
 % The traffic light is located between rr 165:188 cc 218:224 
 
 overlapTraffic          = abs(sum(bboxes - [216 165 10 25],2));
-keepIndex               = (overlapTraffic>5);
-
-
+keepIndex1               = (overlapTraffic>10);
+keepIndex2              = (labels~='person');
+keepIndex              = keepIndex1|keepIndex2;
 
 bboxes                  = bboxes(keepIndex,:);
 scores                  = scores(keepIndex);
