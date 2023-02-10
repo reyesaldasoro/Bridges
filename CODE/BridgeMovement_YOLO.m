@@ -71,13 +71,15 @@ temporalResults5=[];
 %
 for k =1:210%:1:numFrames
     disp(k)
-    currentFrame                = allFrames(:,:,:,k)/255;
-    currentTime                 = stepBetweenFrames*k/videoHandle.FrameRate;
+    currentFrame                            = allFrames(:,:,:,k)/255;
+    currentTime                             = stepBetweenFrames*k/videoHandle.FrameRate;
     % Pass only the masked image as there is no interest other than the
     % areas with movement on the bridge.
     % lower the threshold to avoid losing some weaker detections
-    [bboxes,scores,labels]  = detect(detector,mask7.*currentFrame,Threshold=0.25);
-    [bboxes,scores,labels]  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
+    [bboxes,scores,labels]                  = detect(detector,mask7.*currentFrame,Threshold=0.25);
+    [bboxes2,scores2,labels2,numObjectsRemoved]  = objectsOfInterest(bboxes,scores,labels);
+    [bboxes3,scores3,labels3,numObjectsRemoved2    ]  = cleanOverlappingObjects(bboxes,scores,labels,rows,cols);
+    [bboxes,scores,labels]                  = cleanObjectsBridge(bboxes,scores,labels,rows,cols);
 
 
     %[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
