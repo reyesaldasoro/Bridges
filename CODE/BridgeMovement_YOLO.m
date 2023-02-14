@@ -29,7 +29,7 @@ disp(detector)
 
 %% Define the classes of interest and if necessary region of interest
 h1 = figure(1);
-h1.Position = [100  100  836  469];
+h1.Position = [100  50  836  469];
 h1Image  = imagesc(allFrames(:,:,:,1)/255);
 h1Frames = text(50,50,'b','color','y');
 h1Time   = text(50,70,'a','color','y');
@@ -39,7 +39,7 @@ h11.Position = [0 0 1 1];
 
 
 h2 = figure(2);
-h2.Position = [100  200  836  469];
+h2.Position = [100  100  836  469];
 h2Image  = imagesc(allFrames(:,:,:,1)/255);
 h2Frames = text(50,50,'b','color','y');
 h2Time   = text(50,70,'a','color','y');
@@ -49,7 +49,7 @@ h21.Position = [0 0 1 1];
 
 
 h3 = figure(3);
-h3.Position = [100  300  836  469];
+h3.Position = [100  150  836  469];
 h3Image  = imagesc(allFrames(:,:,:,1)/255);
 h3Frames = text(50,50,'b','color','y');
 h3Time   = text(50,70,'a','color','y');
@@ -57,22 +57,31 @@ axis off
 h31=gca;
 h31.Position = [0 0 1 1];
 
+% h4 = figure(4);
+% h4.Position = [100  200  836  469];
+% h4Image  = imagesc(allFrames(:,:,:,1)/255);
+% h4Frames = text(50,50,'b','color','y');
+% h4Time   = text(50,70,'a','color','y');
+% axis off
+% h41=gca;
+% h41.Position = [0 0 1 1];
 
 %%
-temporalResults5=[];
+cummulativeResults=[];
 clear F* 
 
 %%
+
 for kThres = 0.15  %:0.05:1
-    for k= 1:1:200 %numFrames
+    for k= 1:800%:numFrames
         disp(k)
         currentFrame                                        = allFrames(:,:,:,k)/255;
         currentTime                                         = stepBetweenFrames*k/videoHandle.FrameRate;
         % Pure YOLO, no exclusions
         % lower the threshold to avoid losing some weaker detections, increase
         % threshold to improve accuracy
-        [bboxes0,scores0,labels0]                       = detect(detector,currentFrame,Threshold=kThres);
-        numObjDetected(k,1)                             = numel(labels0);
+        %[bboxes0,scores0,labels0]                       = detect(detector,currentFrame,Threshold=kThres);
+        %numObjDetected(k,1)                             = numel(labels0);
         % Pass only the masked image as there is no interest other than the
         % areas with movement on the bridge.
         [bboxes1,scores1,labels1]                       = detect(detector,maskBridge.*currentFrame,Threshold=kThres);
@@ -88,45 +97,45 @@ for kThres = 0.15  %:0.05:1
         % image
         [currMissedInFrame,avPosX2,avPosY2,numObjMissed(k,1)]  = detectMissedObjects(currentFrame,medImagesum,bboxes4,maskBridge);
    
-        if ~isempty(labels)
-            % Objects detected in current frame, callibrate and record
+        if ~isempty(labels4)
+            % Objects detected in current frame, callibrate to metres along
+            % the bridge and shorten label to be used labels5 is -1 for
+            % those outside the bridge, labels6 car -> c(x=,y=)
             [avPosX,avPosY,labels5,labels6]         = callibrateObjectsBridge(bboxes4,labels4);
 
-            %[temporalResults0,temporalResults1]     = recordObjectsBridge(bboxes4,labels5,currentTime,k,currentFrame,avPosX,avPosY);
-
-            %temporalResults5                        = trackObjectsBridge(temporalResults5,temporalResults1);
+            [allTemporalResults,temporalResultsonBridge]     = recordObjectsBridge(bboxes4,labels5,currentTime,k,currentFrame,avPosX,avPosY);
+            if ~isempty(temporalResultsonBridge)
+                [cummulativeResults]                     = trackObjectsBridge(cummulativeResults,temporalResultsonBridge);
+            end
             %temporalResults5                        = [temporalResults5;temporalResults1];
-            %         % remove the traffic light detected as a pedestrian
-            %         bboxes(trafficLightConditions,:)  =[];
-            %         labels3(trafficLightConditions,:)  =[];
-
-            %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
-            %detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
-            detectedImg1 = insertObjectAnnotation(currentFrame,"rectangle",bboxes0,labels0,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
-            detectedImg2 = insertObjectAnnotation(currentFrame,"rectangle",bboxes1,labels1,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
-            detectedImg3 = insertObjectAnnotation(currMissedInFrame,"rectangle",bboxes4,labels6,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
-            %imagesc(detectedImg)
-            h1Image.CData = detectedImg1;
-            h2Image.CData = detectedImg2;
-            h3Image.CData = detectedImg3;
+            
+%             %detectedImg = insertObjectAnnotation(currentFrame,"Rectangle",bboxes,labels);
+%             %detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
+%             detectedImg1 = insertObjectAnnotation(currentFrame,"rectangle",bboxes0,labels0,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
+%             detectedImg2 = insertObjectAnnotation(currentFrame,"rectangle",bboxes1,labels1,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
+%             detectedImg3 = insertObjectAnnotation(currMissedInFrame,"rectangle",bboxes4,labels6,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
+%             %imagesc(detectedImg)
+%             h1Image.CData = detectedImg1;
+%             h2Image.CData = detectedImg2;
+%             h3Image.CData = detectedImg3;
         else
             %imagesc(currentFrame)
-            h1Image.CData = currentFrame;
-            h2Image.CData = currentFrame;
-            h3Image.CData = currentFrame;
+%             h1Image.CData = currentFrame;
+%             h2Image.CData = currentFrame;
+%             h3Image.CData = currentFrame;
         end
         %input('')
         %pause(0.1)
-        h1Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
-        h1Frames.String  = strcat('Frame:',32,num2str(k));
-        h2Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
-        h2Frames.String  = strcat('Frame:',32,num2str(k));
-        h3Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
-        h3Frames.String  = strcat('Frame:',32,num2str(k));
-        drawnow
-        F1(k)       = getframe(h1);
-        F2(k)       = getframe(h2);
-        F3(k)       = getframe(h3);
+%         h1Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
+%         h1Frames.String  = strcat('Frame:',32,num2str(k));
+%         h2Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
+%         h2Frames.String  = strcat('Frame:',32,num2str(k));
+%         h3Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
+%         h3Frames.String  = strcat('Frame:',32,num2str(k));
+%         drawnow
+%         F1(k)       = getframe(h1);
+%         F2(k)       = getframe(h2);
+%         F3(k)       = getframe(h3);
     end
 end
 %%
