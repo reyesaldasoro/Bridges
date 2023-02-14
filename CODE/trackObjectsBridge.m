@@ -25,6 +25,8 @@ else
 end
 if (currentFrameN==1)
     cummulativeResults    = [[temporalResultsonBridge zeros(numCurrentCars,1) lastCar+(1:numCurrentCars)' zeros(numCurrentCars,1)]];
+    % newLabels            = cummulativeResults(cummulativeResults(:,4)==currentFrameN,13);
+
 else
     if (numCurrentCars>0)
         %% add unique ID per car
@@ -68,19 +70,23 @@ else
                 elseif isempty(isMatch)
                     %temporalResults5( carsLeft_t1(k1,12) ,11 ) = 1+max(temporalResults5(:,11));
                 else
-                    % allocate parent
+                    % allocate parent if it has not been previously
+                    % allocated
                     try
-                        cummulativeResults( carsLeft_t1(k1,12) ,11 ) = carsLeft_t(isMatch,12);
-                        % allocate track
-                        currTrack               = cummulativeResults(carsLeft_t(isMatch,12),13);
-                        if (currTrack~=0)
-                            % track exists
-                            cummulativeResults( carsLeft_t1(k1,12) ,13 ) = currTrack;
-                        else
-                            % new track, going left is negative
-                            currTrack = min(cummulativeResults(:,13))-1;
-                            cummulativeResults( carsLeft_t1(k1,12) ,13 )    = currTrack;
-                            cummulativeResults( carsLeft_t(isMatch,12),13 ) = currTrack;
+                        parentToBeAllocated                          = carsLeft_t(isMatch,12);
+                        if ~any(any(cummulativeResults(:,11)==parentToBeAllocated))
+                            cummulativeResults( carsLeft_t1(k1,12) ,11 ) = parentToBeAllocated;
+                            % allocate track
+                            currTrack               = cummulativeResults(parentToBeAllocated,13);
+                            if (currTrack~=0)
+                                % track exists
+                                cummulativeResults( carsLeft_t1(k1,12) ,13 ) = currTrack;
+                            else
+                                % new track, going left is negative
+                                currTrack = min(cummulativeResults(:,13))-1;
+                                cummulativeResults( carsLeft_t1(k1,12) ,13 )    = currTrack;
+                                cummulativeResults( parentToBeAllocated,13 ) = currTrack;
+                            end
                         end
 
                     catch
@@ -106,60 +112,33 @@ else
                 else
                     % allocate parent
                     try
-                        cummulativeResults( carsRight_t1(k1,12) ,11 ) = carsRight_t(isMatch,12);
+                        parentToBeAllocated                          = carsRight_t(isMatch,12);
 
-                        currTrack               = cummulativeResults(carsRight_t(isMatch,12),13);
-                        if (currTrack~=0)
-                            % track exists
-                            cummulativeResults( carsRight_t1(k1,12) ,13 ) = currTrack;
-                        else
-                            % new track, going left is negative
-                            currTrack = max(cummulativeResults(:,13))+1;
-                            cummulativeResults( carsRight_t1(k1,12) ,13 )    = currTrack;
-                            cummulativeResults( carsRight_t(isMatch,12),13 ) = currTrack;
+                        if ~any(any(cummulativeResults(:,11)==parentToBeAllocated))
+
+                            cummulativeResults( carsRight_t1(k1,12) ,11 ) = parentToBeAllocated;
+                                         currTrack               = cummulativeResults(parentToBeAllocated,13);
+                            if (currTrack~=0)
+                                % track exists
+                                cummulativeResults( carsRight_t1(k1,12) ,13 ) = currTrack;
+                            else
+                                % new track, going left is negative
+                                currTrack = max(cummulativeResults(:,13))+1;
+                                cummulativeResults( carsRight_t1(k1,12) ,13 )    = currTrack;
+                                cummulativeResults( parentToBeAllocated,13 ) = currTrack;
+                            end
+
                         end
-
-
                     catch
                         q=1;
                     end
                 end
             end
         end
-
-
-
-
-
-
-            %         try
-            %             matchL(k1)          = find(distForward<0,1,"last");
-            %         catch
-            %             matchL(k1)          = nan;
-            %         end
-
-        %     for k1 = 1:size(carsLeft_t,1)
-        %         distForward             = (carsLeft_t(k1,1)-carsLeft_t1(:,1));
-        %         try
-        %             matchL(k1)          = find(distForward>0,1);
-        %         catch
-        %             matchL(k1)          = nan;
-        %         end
-        %     end
-        %     for k1 = 1:size(carsRight_t,1)
-        %         distForward             = (-carsRight_t(k1,1)+carsRight_t1(:,1));
-        %         try
-        %             matchR(k1)          = find(distForward>0,1);
-        %         catch
-        %             matchR(k1)          = nan;
-        %         end
-        %     end
-        %%
-
-
-        %%
-
+       % newLabels = cummulativeResults(cummulativeResults(:,4)==currentFrameN,13);
     else
+       % newLabels = cummulativeResults(cummulativeResults(:,4)==currentFrameN,13);
+
         %numCurrentCars      = size(temporalResults1,1);
         %temporalResults5    = [temporalResults1 zeros(numCurrentCars,1) (1:numCurrentCars)'];
     end
