@@ -1,37 +1,53 @@
-function [temporalResults5]  = trackObjectsBridge(temporalResults5,temporalResults1)
-%%
-numCurrentCars                  = size(temporalResults1,1);
-currentFrameN                   = temporalResults1(1,4);
-if isempty(temporalResults5)
-    lastCar = 0;
+function [cummulativeResults]  = trackObjectsBridge(cummulativeResults,temporalResultsonBridge)
+%% track objects from time t-1 to time t
+% Cummulative results will have a record of each object at each time point
+% 1  - position x (along the bridge
+% 2  - position y (lane)
+% 3  - Lane 1 towards the right, 2 towards the left
+% 4  - time frame
+% 5  - time in seconds
+% 6  - label 1 person, 2 motorbike, 3 car, 4 truck, 5 bus
+% 7-9- RGB of object 
+% 10 - unique tag in frame - towards left + towards right
+% 11 - parent
+% 12 - unique number 
+% 13 - track number
+
+
+
+
+numCurrentCars                  = size(temporalResultsonBridge,1);
+currentFrameN                   = temporalResultsonBridge(1,4);
+if isempty(cummulativeResults)
+    lastCar             = 0;
 else
-    lastCar = temporalResults5(end,12);
+    lastCar             = cummulativeResults(end,12);
 end
 if (currentFrameN==1)
-    temporalResults5    = [[temporalResults1 zeros(numCurrentCars,1) lastCar+(1:numCurrentCars)']];
+    cummulativeResults    = [[temporalResultsonBridge zeros(numCurrentCars,1) lastCar+(1:numCurrentCars)' zeros(numCurrentCars,1)]];
 else
     if (numCurrentCars>0)
         %% add unique ID per car
-        temporalResults5    = [temporalResults5;[temporalResults1 zeros(numCurrentCars,1) lastCar+(1:numCurrentCars)']];
+        cummulativeResults    = [cummulativeResults;[temporalResultsonBridge zeros(numCurrentCars,1) lastCar+(1:numCurrentCars)' zeros(numCurrentCars,1)]];
 
         %% track objects by matching t+1 with t, per lane per time
 
-        previousFrame               = (temporalResults5(:,4)==(currentFrameN-1));
-        currentFrame                = (temporalResults5(:,4)==(currentFrameN));
+        previousFrame               = (cummulativeResults(:,4)==(currentFrameN-1));
+        currentFrame                = (cummulativeResults(:,4)==(currentFrameN));
 
         %in previous frame
-        vehiclesOnly                = temporalResults5(:,6)>2;
-        carsMovingRight             = temporalResults5(:,3)==1;
-        carsMovingLeft              = temporalResults5(:,3)==2;
-        carsRight_t                 = temporalResults5(carsMovingRight&previousFrame&vehiclesOnly,:);
-        carsLeft_t                  = temporalResults5(carsMovingLeft &previousFrame&vehiclesOnly,:);
+        vehiclesOnly                = cummulativeResults(:,6)>2;
+        carsMovingRight             = cummulativeResults(:,3)==1;
+        carsMovingLeft              = cummulativeResults(:,3)==2;
+        carsRight_t                 = cummulativeResults(carsMovingRight&previousFrame&vehiclesOnly,:);
+        carsLeft_t                  = cummulativeResults(carsMovingLeft &previousFrame&vehiclesOnly,:);
 
         %in current frame
         %vehiclesOnly                = temporalResults1(:,6)>1;
         %carsMovingRight             = temporalResults1(:,3)==1;
         %carsMovingLeft              = temporalResults1(:,3)==2;
-        carsRight_t1                = temporalResults5(carsMovingRight&currentFrame&vehiclesOnly,:);
-        carsLeft_t1                 = temporalResults5(carsMovingLeft&currentFrame&vehiclesOnly,:);
+        carsRight_t1                = cummulativeResults(carsMovingRight&currentFrame&vehiclesOnly,:);
+        carsLeft_t1                 = cummulativeResults(carsMovingLeft&currentFrame&vehiclesOnly,:);
         %%
 
 
@@ -40,7 +56,7 @@ else
 
         % First cars towards the Left
         for k1 = 1:size(carsLeft_t1,1)
-            distForward             = (carsLeft_t1(k1,1)-carsLeft_t(:,1)+1);
+            distForward             = (carsLeft_t1(k1,1)-carsLeft_t(:,1));
             if isempty(distForward)
                 % first appearance, assign a new number
                 %temporalResults5( carsLeft_t1(k1,12) ,11 ) = 1+max(temporalResults5(:,11));
@@ -54,7 +70,19 @@ else
                 else
                     % allocate parent
                     try
-                        temporalResults5( carsLeft_t1(k1,12) ,11 ) = carsLeft_t(isMatch,12);
+                        cummulativeResults( carsLeft_t1(k1,12) ,11 ) = carsLeft_t(isMatch,12);
+                        % allocate track
+                        currTrack               = cummulativeResults(carsLeft_t(isMatch,12),13);
+                        if (currTrack~=0)
+                            % track exists
+                            cummulativeResults( carsLeft_t1(k1,12) ,13 ) = currTrack;
+                        else
+                            % new track, going left is negative
+                            currTrack = min(cummulativeResults(:,13))-1;
+                            cummulativeResults( carsLeft_t1(k1,12) ,13 )    = currTrack;
+                            cummulativeResults( carsLeft_t(isMatch,12),13 ) = currTrack;
+                        end
+
                     catch
                         q=1;
                     end
@@ -63,7 +91,7 @@ else
         end
         % Cars towards the right
         for k1 = 1:size(carsRight_t1,1)
-            distForward             = (-carsRight_t1(k1,1)+carsRight_t(:,1)+1);
+            distForward             = (-carsRight_t1(k1,1)+carsRight_t(:,1));
             %distForward             = (carsLeft_t1(k1,1)-carsLeft_t(:,1)+1);
             if isempty(distForward)
                 % first appearance, assign a new number
@@ -78,7 +106,20 @@ else
                 else
                     % allocate parent
                     try
-                        temporalResults5( carsRight_t1(k1,12) ,11 ) = carsRight_t(isMatch,12);
+                        cummulativeResults( carsRight_t1(k1,12) ,11 ) = carsRight_t(isMatch,12);
+
+                        currTrack               = cummulativeResults(carsRight_t(isMatch,12),13);
+                        if (currTrack~=0)
+                            % track exists
+                            cummulativeResults( carsRight_t1(k1,12) ,13 ) = currTrack;
+                        else
+                            % new track, going left is negative
+                            currTrack = max(cummulativeResults(:,13))+1;
+                            cummulativeResults( carsRight_t1(k1,12) ,13 )    = currTrack;
+                            cummulativeResults( carsRight_t(isMatch,12),13 ) = currTrack;
+                        end
+
+
                     catch
                         q=1;
                     end
