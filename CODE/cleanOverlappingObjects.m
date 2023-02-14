@@ -60,7 +60,30 @@ if size(bboxes,1)>1
                     % keep the car
                     keepIndex(obj1(k2))   = 0;
                 end
+            elseif  (labels(obj1(k2))=='person'&labels(obj2(k2))=='car')
+                % car and person? Most likely it is a motorbike if small
+                if sizeROI(obj2(k2))<300
+                    % keep the motorbike
+                    keepIndex(obj1(k2))   = 0;
+                    labels(obj2(k2))='motorbike';
+                else
+                    % keep the car
+                    keepIndex(obj1(k2))   = 0;
+                end
+            elseif  (labels(obj1(k2))=='car'&labels(obj2(k2))=='person')
+                % car and person? Most likely it is a motorbike if small
+                if sizeROI(obj1(k2))<300
+                    % keep the motorbike
+                    keepIndex(obj2(k2))   = 0;
+                    labels(obj2(k2))='motorbike';
+                else
+                    % keep the car
+                    keepIndex(obj2(k2))   = 0;
+                end
+
+
             else
+
                 % bus and truck ?
                 keepIndex(obj2(k2))   = 0;
                 disp(labels(obj1(k2)))
