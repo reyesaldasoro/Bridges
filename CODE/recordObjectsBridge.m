@@ -1,4 +1,4 @@
-function [temporalResults,temporalResults2,trafficLightConditions]  = recordObjectsBridge(bboxes,labels,currentTime,k,currentFrame,avPosX,avPosY)
+function [temporalResults,temporalResults2]  = recordObjectsBridge(bboxes,labels,currentTime,k,currentFrame,avPosX,avPosY)
 
 % Store one row per object, in columns
 % 1  X position with respect to bridge, callibrated in metres
@@ -40,12 +40,6 @@ currentLane             = 1.5+sign(-avPosY)/2;
 %% these are the results as returned by the detector
 temporalResults             = [round(avPosX) round(avPosY) currentLane repmat([k   currentTime],[numCurrentObjects 1]) labels currentRGB];
 
-
-% %% Remove the traffic light confused as a person
-% trafficLightConditions =    ((temporalResults(:,5)==1)|(temporalResults(:,5)==-1)  ) &...
-%                             ((temporalResults(:,1)==2)|(temporalResults(:,1)==1)) &...
-%                             ((temporalResults(:,2)==-2)|(temporalResults(:,2)==1));
-% labels(trafficLightConditions)=0;
 %% Discard objects not in bridge, and order by lane and position
 temporalResults1            = temporalResults;
 temporalResults1            = temporalResults1(labels>0,:);
@@ -70,28 +64,6 @@ tagRight                    = notPedestriansRight.*(cumsum(notPedestriansRight))
 %carsMovingLeft              = [carsMovingLeft(orderLeft,:)  -tagLeft(orderLeft,:)];
 temporalResults2            = [[carsMovingRight tagRight];[carsMovingLeft -tagLeft]];
 
-
-%temporalResults        = [round(avPosX) (currentLane) repmat(currentTime,[numCurrentObjects 1]) currentWeights currentBoxArea currentRGB ];
-%temporalResults = 0;
-% % time
-% temporalResults{k2,1} = stepBetweenFrames*k/videoHandle.FrameRate;
-% % num Objects
-% temporalResults{k2,2} = numCurrentObjects;
-% %temporalResults{k2,2} = sum(1-[segmentedObjects_P.onEdge]);
-% % weight
-% temporalResults{k2,3} = round(currentWeights);
-% % position metres from left edge
-% temporalResults{k2,4} = round(currentPosX);
-% temporalResults{k2,5} = round(currentPosY);
-% temporalResults{k2,6} = labels;
-% 
-% 
-% % Area
-% temporalResults{k2,7} = currentObjects;
-% %     % position x pixels
-% temporalResults{k2,8} = currentCentroids(1:2:end);
-% %     % Position y pixels
-% temporalResults{k2,9} = currentCentroids(2:2:end);
 
 
 
