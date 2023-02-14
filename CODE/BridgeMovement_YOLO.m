@@ -64,7 +64,7 @@ clear F*
 
 %%
 for kThres = 0.15  %:0.05:1
-    for k= 86% 1:1:200%numFrames
+    for k= 1:1:200 %numFrames
         disp(k)
         currentFrame                                        = allFrames(:,:,:,k)/255;
         currentTime                                         = stepBetweenFrames*k/videoHandle.FrameRate;
@@ -75,21 +75,21 @@ for kThres = 0.15  %:0.05:1
         numObjDetected(k,1)                             = numel(labels0);
         % Pass only the masked image as there is no interest other than the
         % areas with movement on the bridge.
-
         [bboxes1,scores1,labels1]                       = detect(detector,maskBridge.*currentFrame,Threshold=kThres);
         numObjDetectedMask(k,1)                         = numel(labels1);
+        % remove objects that are not of interest, traffic light, umbrella,
+        % etc. Use the label
         [bboxes2,scores2,labels2,numObjRemoved(k,1)]    = objectsOfInterest(bboxes1,scores1,labels1);
+        % there will be overlapping boxes, resolve
         [bboxes3,scores3,labels3,numObjRemoved(k,2)]    = cleanOverlappingObjects(bboxes2,scores2,labels2,rows,cols);
+        % remove traffic light confused as person
         [bboxes4,scores4,labels4,numObjRemoved(k,3)]    = cleanObjectsBridge(bboxes3,scores3,labels3);
+        % detect objects that were missed based on movement against median
+        % image
         [currMissedInFrame,avPosX2,avPosY2,numObjMissed(k,1)]  = detectMissedObjects(currentFrame,medImagesum,bboxes4,maskBridge);
-
-        %[temporalResults4,labels2,labels3]  = recordObjectsBridge(bboxes,labels,stepBetweenFrames*k/videoHandle.FrameRate,currentFrame,avPosX,avPosY);
-
-
-        % Use current Difference to detect objects that are missed by Yolo
-
-
+   
         if ~isempty(labels)
+            % Objects detected in current frame, callibrate and record
             [avPosX,avPosY,labels5,labels6]         = callibrateObjectsBridge(bboxes4,labels4);
 
             %[temporalResults0,temporalResults1]     = recordObjectsBridge(bboxes4,labels5,currentTime,k,currentFrame,avPosX,avPosY);
@@ -134,7 +134,7 @@ end
 
 %% Save movie as AVI
 % Saving as mp4 loses some frames
-output_video = VideoWriter('traffic_2023_02_10_Yolo_1_200_h2');
+output_video = VideoWriter('traffic_2023_02_14_Yolo_1_200_h3');
 open(output_video);
 writeVideo(output_video,F3);
 close(output_video);
