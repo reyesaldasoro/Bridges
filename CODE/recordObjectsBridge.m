@@ -1,4 +1,4 @@
-function [temporalResults,temporalResults2]  = recordObjectsBridge(bboxes,labels,currentTime,k,currentFrame,avPosX,avPosY)
+function [temporalResults,temporalResults2,newOrder]  = recordObjectsBridge(bboxes,labels,currentTime,k,currentFrame,avPosX,avPosY)
 
 % Store one row per object, in columns
 % 1  X position with respect to bridge, callibrated in metres
@@ -63,6 +63,7 @@ tagRight                    = notPedestriansRight.*(cumsum(notPedestriansRight))
 %carsMovingRight             = [carsMovingRight(orderRight,:) tagRight(orderRight,:)];
 %carsMovingLeft              = [carsMovingLeft(orderLeft,:)  -tagLeft(orderLeft,:)];
 temporalResults2            = [[carsMovingRight tagRight];[carsMovingLeft -tagLeft]];
+newOrder                    = [orderRight; numel(orderRight)+orderLeft];
 
 
 
