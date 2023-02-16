@@ -1,3 +1,5 @@
+function displayTraffic_yolo(cummulativeResults)
+
 numTracksR = max(cummulativeResults(:,13));
 
 figure
