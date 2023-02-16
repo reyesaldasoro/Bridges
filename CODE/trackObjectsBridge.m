@@ -1,4 +1,4 @@
-function [cummulativeResults]  = trackObjectsBridge(cummulativeResults,temporalResultsonBridge)
+function [cummulativeResults,labelsCurrent,currentResults]  = trackObjectsBridge(cummulativeResults,temporalResultsonBridge)
 %% track objects from time t-1 to time t
 % Cummulative results will have a record of each object at each time point
 % 1  - position x (along the bridge
@@ -63,7 +63,8 @@ else
                 % first appearance, assign a new number
                 %temporalResults5( carsLeft_t1(k1,12) ,11 ) = 1+max(temporalResults5(:,11));
             else
-                isMatch = find(distForward<0,1,"last");
+                % keep within mean+-3*std
+                isMatch = find((distForward<0.1)&(distForward>-5),1,"last");
                 if (isnan(isMatch))
                     % first appearance, assign a new number
                     %temporalResults5( carsLeft_t1(k1,12) ,11 ) = 1+max(temporalResults5(:,11));
@@ -103,7 +104,7 @@ else
                 % first appearance, assign a new number
                 %temporalResults5( carsLeft_t1(k1,12) ,11 ) = 1+max(temporalResults5(:,11));
             else
-                isMatch = find(distForward<0,1,"last");
+                isMatch = find((distForward<0.1)&(distForward>-5),1,"last");
                 if (isnan(isMatch))
                     % first appearance, assign a new number
                     %temporalResults5( carsLeft_t1(k1,12) ,11 ) = 1+max(temporalResults5(:,11));
@@ -144,3 +145,11 @@ else
     end
 end
 %%
+currentResults  = cummulativeResults(cummulativeResults(:,4)==currentFrameN,:);
+for k=1:numCurrentCars
+    if currentResults(k,13)~=0
+        labelsCurrent{k,1}   =num2str(currentResults(k,13));
+    else
+        labelsCurrent{k,1}   ='';
+    end
+end
