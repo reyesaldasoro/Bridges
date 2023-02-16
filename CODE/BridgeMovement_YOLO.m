@@ -47,7 +47,7 @@ axis off
 h21=gca;
 h21.Position = [0 0 1 1];
 
-
+%%
 h3 = figure(3);
 h3.Position = [100  150  836  469];
 h3Image  = imagesc(allFrames(:,:,:,1)/255);
@@ -73,7 +73,7 @@ clear F*
 %%
 
 for kThres = 0.15  %:0.05:1
-    for k= 1:800%:numFrames
+    for k= 1:63%:numFrames
         disp(k)
         currentFrame                                        = allFrames(:,:,:,k)/255;
         currentTime                                         = stepBetweenFrames*k/videoHandle.FrameRate;
@@ -103,9 +103,9 @@ for kThres = 0.15  %:0.05:1
             % those outside the bridge, labels6 car -> c(x=,y=)
             [avPosX,avPosY,labels5,labels6]         = callibrateObjectsBridge(bboxes4,labels4);
 
-            [allTemporalResults,temporalResultsonBridge]     = recordObjectsBridge(bboxes4,labels5,currentTime,k,currentFrame,avPosX,avPosY);
+            [allTemporalResults,temporalResultsonBridge,newOrder]     = recordObjectsBridge(bboxes4,labels5,currentTime,k,currentFrame,avPosX,avPosY);
             if ~isempty(temporalResultsonBridge)
-                [cummulativeResults]                     = trackObjectsBridge(cummulativeResults,temporalResultsonBridge);
+                [cummulativeResults,labelsCurrent]          = trackObjectsBridge(cummulativeResults,temporalResultsonBridge);
             end
             %temporalResults5                        = [temporalResults5;temporalResults1];
             
@@ -113,16 +113,19 @@ for kThres = 0.15  %:0.05:1
 %             %detectedImg = insertObjectAnnotation(currentMissedInFrame,"rectangle",bboxes,labels3,'color',0.6*[1 1 1],'LineWidth',1,'TextBoxOpacity',0.6,'FontSize',12,'font','arial','textcolor','white');
 %             detectedImg1 = insertObjectAnnotation(currentFrame,"rectangle",bboxes0,labels0,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
 %             detectedImg2 = insertObjectAnnotation(currentFrame,"rectangle",bboxes1,labels1,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
-%             detectedImg3 = insertObjectAnnotation(currMissedInFrame,"rectangle",bboxes4,labels6,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
+             detectedImg3 = insertObjectAnnotation(currMissedInFrame,"rectangle",bboxes4,labels6,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
+%            bboxes5=bboxes4(labels5>0 ,:);
+%            bboxes5=bboxes5(newOrder,:);
+%             detectedImg3 = insertObjectAnnotation(currMissedInFrame,"rectangle",bboxes5,labelsCurrent,'LineWidth',1,'TextBoxOpacity',0.2,'FontSize',12,'font','arial','textcolor','white');
 %             %imagesc(detectedImg)
 %             h1Image.CData = detectedImg1;
 %             h2Image.CData = detectedImg2;
-%             h3Image.CData = detectedImg3;
+             h3Image.CData = detectedImg3;
         else
             %imagesc(currentFrame)
 %             h1Image.CData = currentFrame;
 %             h2Image.CData = currentFrame;
-%             h3Image.CData = currentFrame;
+             h3Image.CData = currentFrame;
         end
         %input('')
         %pause(0.1)
@@ -130,12 +133,12 @@ for kThres = 0.15  %:0.05:1
 %         h1Frames.String  = strcat('Frame:',32,num2str(k));
 %         h2Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
 %         h2Frames.String  = strcat('Frame:',32,num2str(k));
-%         h3Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
-%         h3Frames.String  = strcat('Frame:',32,num2str(k));
-%         drawnow
+         h3Time.String    = strcat('Time:',32,32,32,num2str(currentTime));
+         h3Frames.String  = strcat('Frame:',32,num2str(k));
+         drawnow
 %         F1(k)       = getframe(h1);
 %         F2(k)       = getframe(h2);
-%         F3(k)       = getframe(h3);
+         F3(k)       = getframe(h3);
     end
 end
 %%
@@ -143,8 +146,27 @@ end
 
 %% Save movie as AVI
 % Saving as mp4 loses some frames
-output_video = VideoWriter('traffic_2023_02_14_Yolo_1_200_h3');
+output_video = VideoWriter('traffic_2023_02_16_Yolo_h3');
 open(output_video);
 writeVideo(output_video,F3);
 close(output_video);
 
+%%
+output_video = VideoWriter('traffic_2023_02_16_Yolo_h3_b.mp4');
+open(output_video);
+writeVideo(output_video,F3);
+close(output_video);
+
+
+%% Find mean +- std of movements 
+% ddist=[];
+% ddist2=[];
+% for kk=-1:-1:numTracksL
+%     numElementsTrack = sum(cummulativeResults(:,13)==kk);
+%     ddist = [ddist; diff(cummulativeResults(cummulativeResults(:,13)==kk,1))];
+% end
+% 
+% for kk=1:numTracksR
+%     numElementsTrack = sum(cummulativeResults(:,13)==kk);
+%     ddist2 = [ddist2; diff(cummulativeResults(cummulativeResults(:,13)==kk,1))];
+% end
